@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Newport Mooring Association</title>
+  <link rel="icon" href="/assets/nma-favicon.png" />
+  <style>
+    :root{
+      --brand-teal:#5b8f8e;
+      --brand-teal-600:#4a7978;
+      --brand-ink:#111;
+      --brand-muted:#6b7a7a;
+      --border:#e6ecec;
+      --bg:#fff;
+      --chip-bg:#f3f7f7;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1f2d2d;background:var(--bg)}
+
+    /* ===== Header/Nav ===== */
+    .site-header{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--border)}
+    .nav{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:28px 24px 22px}
+
+    .brand{display:flex;align-items:center;gap:16px;text-decoration:none;color:#1f2d2d;min-width:340px}
+    .brand img{height:56px;width:auto;display:block}
+    .brand-title{letter-spacing:.2px;line-height:1.15;font-weight:400}
+
+    .menu{display:flex;gap:48px;align-items:flex-end}
+    .menu a{position:relative;color:var(--brand-teal);text-decoration:none;font-weight:600;letter-spacing:.1px;padding:0 0 10px}
+    .menu a:hover{color:var(--brand-teal-600)}
+    .menu a.active{color:var(--brand-ink)}
+    .menu a.active::after{content:"";position:absolute;left:50%;transform:translateX(-50%);bottom:-12px;width:46px;height:3px;background:#111;border-radius:2px}
+
+    .menu a.more{display:inline-flex;align-items:center}
+    .menu a.more .caret{display:inline-block;margin-left:8px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid var(--brand-teal)}
+
+    .actions{display:flex;align-items:center;gap:18px}
+    .divider{width:1px;height:22px;background:#cfd8d8;display:inline-block}
+    .avatar{width:22px;height:22px;display:inline-grid;place-items:center}
+    .avatar svg{display:block}
+
+    /* ===== Page ===== */
+    .page{max-width:1100px;margin:0 auto;padding:28px 16px 80px}
+    .eyebrow{color:var(--brand-teal-600);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:.8rem}
+    h1{margin:8px 0 8px;font-size:clamp(1.6rem,2.4vw,2.2rem);color:var(--brand-teal);letter-spacing:.3px}
+    .lead{max-width:70ch;color:var(--brand-muted);margin-bottom:22px}
+
+    .search-wrap{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 1px 0 rgba(0,0,0,.02)}
+    .search-row{display:grid;grid-template-columns:1fr auto;gap:10px}
+    .search-input{width:100%;padding:14px;border:1px solid var(--border);border-radius:10px;font-size:1rem}
+    .search-btn{padding:12px 16px;border:1px solid var(--brand-teal);background:var(--brand-teal);color:#fff;border-radius:10px;font-weight:700}
+    .assist{margin-top:10px;font-size:.9rem;color:var(--brand-muted)}
+
+    .filters{margin-top:14px;display:flex;flex-wrap:wrap;gap:10px}
+    .chip{border:1px solid var(--border);border-radius:999px;padding:8px 12px;background:var(--chip-bg);font-size:.9rem;color:#1f2d2d}
+
+    .advanced{margin-top:12px;border:1px dashed var(--border);border-radius:10px;padding:12px}
+    .advanced-title{font-weight:700;color:var(--brand-teal-600);margin:0 0 8px}
+    .advanced-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .advanced .field{display:flex;flex-direction:column;gap:6px}
+    .advanced label{font-size:.9rem;color:var(--brand-muted)}
+    .advanced input,.advanced select{padding:10px;border:1px solid var(--border);border-radius:8px}
+
+    .az{margin-top:10px;border-top:1px dashed var(--border);padding-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+    .az span{padding:6px 8px;color:var(--brand-teal-600);font-weight:700}
+
+    .results-meta{display:flex;align-items:baseline;gap:12px;margin:22px 2px 10px;color:var(--brand-muted)}
+    .result-list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+    .card{border:1px solid var(--border);border-left:5px solid var(--brand-teal);border-radius:10px;padding:14px 16px;background:#fff}
+    .card h3{margin:0 0 6px;font-size:1.05rem}
+    .card a{color:var(--brand-teal-600);text-decoration:none}
+    .card p{margin:8px 0 0;color:#2a3434}
+    .meta{display:flex;gap:10px;align-items:center;font-size:.85rem;color:var(--brand-muted)}
+    .tag{font-size:.75rem;background:var(--chip-bg);border:1px solid var(--border);padding:3px 8px;border-radius:999px}
+
+    footer{border-top:1px solid var(--border);padding:24px 16px;background:#fff}
+    .footer-wrap{max-width:1100px;margin:0 auto;color:var(--brand-muted);font-size:.95rem}
+    .footer-wrap p{margin:6px 0}
+  </style>
+</head>
+<body>
+  <header class="site-header" aria-label="Site Navigation">
+    <nav class="nav">
+      <a class="brand" href="#" aria-label="Newport Mooring Association home">
+        <img src="https://img1.wsimg.com/isteam/ip/f3f6fe54-bd90-43dd-8394-89127b71c9c3/New%20NMA%20Logo.png/:/rs=w:708,h:250,cg:true,m/cr=w:708,h:250/qt=q:95" alt="Newport Mooring Association" />
+      </a>
+      <div class="menu" role="navigation" aria-label="Primary">
+        <a href="#">Home</a>
+        <a href="#">Membership &amp; Donations</a>
+        <a href="#" class="active">Learn</a>
+        <a href="#">More</a>
+      </div>
+      <div class="actions" aria-label="Account">
+        <span class="divider" aria-hidden="true"></span>
+        <span class="avatar" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="12" cy="8" r="4" fill="#111"/>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6" fill="#111"/>
+          </svg>
+        </span>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page" id="main">
+    <div class="eyebrow">Learn</div>
+    <h1>Search through files the NMA has collected </h1>
+    <p class="lead">Explore terms, topics, and historical references related to mooring in Newport/California.</p>
+
+    <section class="search-wrap">
+      <div class="search-row">
+        <input class="search-input" type="search" placeholder="Search terms (e.g., permit, liveaboard, waitlist, tidelands)…" />
+        <button class="search-btn" type="button">Search</button>
+      </div>
+      <p class="assist">Filter by topic or jump by letter.</p>
+
+      <div class="filters">
+        <span class="chip">Definitions</span>
+        <span class="chip">Policy</span>
+        <span class="chip">Process</span>
+        <span class="chip">Fees</span>
+        <span class="chip">Legal</span>
+        <span class="chip">Governance</span>
+        <span class="chip">Resources</span>
+        <span class="chip">History</span>
+      </div>
+
+      <div class="advanced">
+        <p class="advanced-title">Advanced filters</p>
+        <div class="advanced-grid">
+          <div class="field">
+            <label>Source</label>
+            <select disabled><option>Any</option></select>
+          </div>
+          <div class="field">
+            <label>Year</label>
+            <input type="text" placeholder="e.g., 2018–2025" disabled />
+          </div>
+          <div class="field">
+            <label>Document type</label>
+            <select disabled><option>Any</option></select>
+          </div>
+          <div class="field">
+            <input type="button" value="Reset" disabled />  
+        </div>
+      </div>
+
+      <div class="az">
+        <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span><span>J</span><span>K</span><span>L</span><span>M</span><span>N</span><span>O</span><span>P</span><span>Q</span><span>R</span><span>S</span><span>T</span><span>U</span><span>V</span><span>W</span><span>X</span><span>Y</span><span>Z</span>
+      </div>
+    </section>
+
+    <div class="results-meta">8 results · Examples</div>
+    <ol class="result-list">
+      <li class="card"><h3><a href="#">Document Name</a></h3><div class="meta"><span>Source</span><span class="tag">Topic/Type</span></div><p>Brief Summary of the result if possible</p></li>
+      <li class="card"><h3><a href="#">Waitlist – Mooring</a></h3><div class="meta"><span>City Portal</span><span class="tag">Process</span></div><p>How to apply, maintain position, and typical timelines for assignment.</p></li>
+    </ol>
+  </main>
+
+  <footer>
+    <div class="footer-wrap">
+      <p>Thank you for your support!</p>
+      <p>P.O. Box 1118, Newport Beach, CA 92659 Contact us at <a href="mailto:mail@newportmooringassociation.org">mail@newportmooringassociation.org</a></p>
+      <p>Copyright © 2018 Newport Mooring Association - All Rights Reserved.</p>
+      <p>Powered by</p>
+    </div>
+  </footer>
+</body>
+</html>
