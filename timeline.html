@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Newport Mooring Association Timeline</title>
+  <link rel="icon" href="/assets/nma-favicon.png" />
+  <style>
+
+    /* Variables & reset */
+    :root{--brand-teal:#5b8f8e;--brand-teal-600:#4a7978;--brand-ink:#111;--brand-muted:#6b7a7a;--border:#e6ecec;--bg:#fff}
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1f2d2d;background:var(--bg)}
+
+    /* Header / navigation */
+    .site-header{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--border)}
+    .nav{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:28px 24px 22px}
+    .brand{display:flex;align-items:center;gap:16px;text-decoration:none;color:#1f2d2d;min-width:340px}
+    .brand img{height:56px;width:auto;display:block}
+    .menu{display:flex;gap:48px;align-items:flex-end}
+    .menu a{position:relative;color:var(--brand-teal);text-decoration:none;font-weight:600;letter-spacing:.1px;padding:0 0 10px}
+    .menu a:hover{color:var(--brand-teal-600)}
+    .menu a.active{color:var(--brand-ink)}
+    .menu a.active::after{content:"";position:absolute;left:50%;transform:translateX(-50%);bottom:-12px;width:46px;height:3px;background:#111;border-radius:2px}
+
+    /* User actions (avatar / utilities) */
+    .actions{display:flex;align-items:center;gap:18px}
+    .divider{width:1px;height:22px;background:#cfd8d8;display:inline-block}
+    .avatar{width:22px;height:22px;display:inline-grid;place-items:center}
+    .avatar svg{display:block}
+
+    /* Page content */
+    .page{max-width:1100px;margin:0 auto;padding:28px 16px 80px}
+    .eyebrow{color:var(--brand-teal-600);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:.8rem}
+    h1{margin:8px 0 12px;font-size:clamp(1.6rem,2.4vw,2.2rem);color:var(--brand-teal);letter-spacing:.3px}
+    .lead{max-width:70ch;color:var(--brand-muted);margin-bottom:22px}
+
+    /* Timeline container */
+    .timeline-frame{border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+    .timeline-frame header{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+    .timeline-frame header h2{margin:0;font-size:1.15rem;color:var(--brand-ink)}
+    .timeline-frame header p{margin:0;color:var(--brand-muted);font-size:.95rem}
+    .timeline-embed{width:100%;border:0;display:block}
+
+    /* Footer */
+    footer{border-top:1px solid var(--border);padding:24px 16px;background:#fff}
+    .footer-wrap{max-width:1100px;margin:0 auto;color:var(--brand-muted);font-size:.95rem}
+    .footer-wrap p{margin:6px 0}
+
+    /* Responsive tweaks */
+    @media (max-width:720px){
+      .nav{flex-direction:column;gap:18px}
+      .menu{gap:24px;flex-wrap:wrap;justify-content:center}
+      .brand{min-width:auto;justify-content:center}
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header" aria-label="Site Navigation">
+    <nav class="nav">
+      <a class="brand" href="#" aria-label="Newport Mooring Association home">
+        <img src="https://img1.wsimg.com/isteam/ip/f3f6fe54-bd90-43dd-8394-89127b71c9c3/New%20NMA%20Logo.png/:/rs=w:708,h:250,cg:true,m/cr=w:708,h:250/qt=q:95" alt="Newport Mooring Association" />
+      </a>
+      <div class="menu" role="navigation" aria-label="Primary">
+        <a href="#">Home</a>
+        <a href="#">Membership &amp; Donations</a>
+        <a href="#" class="active">Timeline</a>
+        <a href="#">More</a>
+      </div>
+      <div class="actions" aria-label="Account">
+        <span class="divider" aria-hidden="true"></span>
+        <span class="avatar" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="12" cy="8" r="4" fill="#111"/>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6" fill="#111"/>
+          </svg>
+        </span>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page" id="main">
+    <div class="eyebrow">Learn</div>
+    <h1>Timeline of Newport Mooring Association Milestones</h1>
+    <p class="lead">Browse pivotal events, agreements, and documents the NMA has gathered to tell the story of mooring in Newport Harbor. Use the embedded Knight Lab timeline fed directly from our curated Google Sheet.</p>
+
+
+    <section class="timeline-frame" aria-label="Timeline embed">
+      <header>
+        <h2>Interactive timeline</h2>
+        <p>Explore documents, photos, and milestones from the NMA archive. View full-screen via the share link if you prefer.</p>
+      </header>
+      <!-- Knight Lab Timeline embed
+           - To update the data source, replace the `source=` param in the iframe `src` with your Google Sheet ID
+           - For more options see: https://timeline.knightlab.com/docs/embed.html -->
+      <iframe class="timeline-embed" title="Newport Mooring Association timeline" src="https://cdn.knightlab.com/libs/timeline3/latest/embed/index.html?source=1cWqQBZCkX9GpzFtxCWHoqFXCHg-ylTVUWlnrdYMzKUI&amp;font=Default&amp;lang=en&amp;initial_zoom=2&amp;width=100%25&amp;height=650" width="100%" height="650" allowfullscreen></iframe>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="footer-wrap">
+      <p>Thank you for your support!</p>
+      <p>P.O. Box 1118, Newport Beach, CA 92659 &nbsp;|&nbsp; Contact us at <a href="mailto:mail@newportmooringassociation.org">mail@newportmooringassociation.org</a></p>
+      <p>Copyright © 2018 Newport Mooring Association - All Rights Reserved.</p>
+      <p>Powered by</p>
+    </div>
+  </footer>
+</body>
+</html>
