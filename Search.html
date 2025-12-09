@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NMA Search</title>
+  <link rel="icon" href="/assets/nma-favicon.png" />
+
+  <style>
+    :root {
+      --brand-teal: #5b8f8e;      /* primary brand color */
+      --cta: #C0E6E6;             /* call-to-action + highlight color */
+      --border: #e6ecec;          /* border color for cards and containers */
+      --chip-bg: #f3f7f7;         /* subtle background color for chips */
+    }
+
+    /* Overall page layout */
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      background: #fff;
+      color: #111;
+      /* Helps avoid accidental sideways scrolling if some card gets too wide */
+      overflow-x: hidden;
+    }
+    .page {
+      padding: 1.5rem;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    /* Main page title */
+    h1 {
+      text-align: center;
+      color: var(--brand-teal);
+      font-size: 2.3rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Intro text under the page title */
+    .lead {
+      color: #6b7a7a;
+      max-width: 60ch;
+      margin: 0 auto 24px;
+      font-size: 1.05rem;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* Shared section heading style */
+    .section-heading {
+      color: var(--brand-teal);
+      font-size: 1.8rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 0.3rem;
+    }
+
+    /* Shared explanatory text under section headings */
+    .section-lead {
+      max-width: 70ch;
+      color: #555;
+      margin: 0 auto 1rem;
+      font-size: 1.05rem;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* Thick line used to separate major sections visually */
+    .section-divider {
+      border-top: 5px solid var(--brand-teal);
+      margin: 2rem 0;
+    }
+
+    /* Search section container */
+    .search-section {
+      border: 4px solid var(--cta);
+      border-radius: 14px;
+      padding: 1.2rem;
+      background: #f9ffff;
+    }
+
+    /* Header area inside the search section */
+    .search-header {
+      border: 3px solid var(--cta);
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      background: #ffffff;
+      margin-bottom: 1rem;
+    }
+
+    /* Collapsible details box for search tools */
+    details.search-box {
+      border: 3px solid var(--border);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      overflow: hidden; /* keep children inside the box */
+    }
+
+    summary {
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 1rem;
+      color: var(--brand-teal);
+    }
+
+    /* Layout for the search input + button row */
+    .search-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Keyword input field */
+    .search-controls input[type="text"] {
+      flex: 1 1 auto;           /* take remaining space */
+      min-width: 0;             /* allow shrinking inside flex */
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      box-sizing: border-box;   /* respect container width */
+    }
+
+    /* Standard button styling */
+    button {
+      background: var(--cta);
+      border: 2px solid var(--brand-teal);
+      padding: 0.75rem 1.2rem;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover {
+      filter: brightness(0.97);
+    }
+
+    /* View/Hide list style buttons */
+    .results-toggle {
+      background: var(--cta);
+      border: 2px solid var(--brand-teal);
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 1rem;
+    }
+
+    /* Tag + A–Z chip rows */
+    .filters,
+    .az {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0 20px;
+    }
+
+    /* Default chip pill look */
+    .chip,
+    .az span {
+      background: var(--chip-bg);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    /* Selected chip variation */
+    .chip-selected {
+      border-color: var(--brand-teal);
+      background: var(--cta);
+      font-weight: 600;
+    }
+
+    /* Card style shared by full list, search results, and tag results */
+    .card {
+      border: 5px solid var(--border);
+      border-left: 5px solid var(--brand-teal);
+      background: #fff;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .card h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+    }
+
+    .card h3 a {
+      text-decoration: none;
+      color: #123;
+      word-wrap: break-word;  /* long filenames don't blow up layout */
+    }
+
+    .card h3 a:hover {
+      text-decoration: underline;
+    }
+
+    .tag {
+      font-size: 0.75rem;
+      background: var(--cta);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+
+    .meta {
+      color: #666;
+      margin-top: 0.5rem;
+    }
+
+    .meta small {
+      font-size: 0.85rem;
+      background: #f0f0f0;
+      border-radius: 999px;
+      padding: 2px 8px;
+      margin-right: 5px;
+      display: inline-block;
+    }
+
+    /* Reset button near the search section */
+    .reset-button {
+      display: none;
+      margin-bottom: 1rem;
+    }
+
+    /* Search results section container */
+    #searchResults {
+      margin-top: 1rem;
+    }
+
+    /* Scrollable panels for search results, full list, and tag results.
+       These keep everything vertical, but capped, so users aren't stuck in a mega-scroll. */
+    .results-scroll-panel {
+      max-height: 65vh;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+      padding-right: 0.25rem;
+      box-sizing: border-box;
+    }
+
+    /* Wrapper for nav buttons + panel */
+    .results-scroll-wrapper {
+      margin-top: 1rem;
+    }
+
+    /* Back-to-top / bottom controls for results panels */
+    .scroll-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .nav-button {
+      background: var(--cta);
+      border: 2px solid var(--brand-teal);
+      border-radius: 8px;
+      padding: 0.55rem 0.9rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 1 1 auto;
+    }
+
+    .nav-button:hover {
+      filter: brightness(0.97);
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 600px) {
+      .search-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .search-controls input[type="text"],
+      .search-controls button {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      .filters, .az { justify-content: center; }
+      .section-lead { text-align: left; }
+      .section-heading { text-align: left; }
+
+      /* Make result panels a little taller on mobile so users see more at once */
+      .results-scroll-panel {
+        max-height: 70vh;
+      }
+
+      .nav-button {
+        width: 100%;  /* each nav button can live on its own line on small screens */
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <!-- Page header: title + description -->
+    <h1>Explore documents the NMA has collected</h1>
+    <p class="lead">
+      Use the tools on this page to look up files related to mooring issues in Newport Beach.
+      Search by keyword, browse alphabetically, or filter by tags.
+    </p>
+
+    <div class="section-divider"></div>
+
+    <!-- SEARCH SECTION -->
+    <section class="search-section">
+      <div class="search-header">
+        <h2 class="section-heading">Search the NMA Library</h2>
+        <p class="section-lead">
+          Type a keyword and click search, or use the A–Z filter to view titles that start with a certain letter.
+        </p>
+      </div>
+
+      <!-- Collapsible area for search tools -->
+      <details class="search-box" open>
+        <summary>Search Tools</summary>
+
+        <!-- Keyword input + search button -->
+        <div class="search-controls">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="For example: permit, liveaboard, tidelands..."
+          >
+          <button type="button" onclick="runKeywordSearch()">Search</button>
+        </div>
+
+        <!-- A–Z filter row, letters are injected via JS -->
+        <div class="az" id="azFilter"></div>
+      </details>
+
+      <!-- Reset button for search and A–Z filters -->
+      <button
+        id="resetBtn"
+        class="reset-button"
+        type="button"
+        onclick="resetSearchAndFilters()"
+      >
+        ← Reset Search / Filters
+      </button>
+    </section>
+
+    <!-- SEARCH RESULTS SECTION -->
+    <div class="section-divider"></div>
+
+    <section id="searchResultsSection">
+      <h2 class="section-heading">Search Results</h2>
+      <p class="section-lead">
+        This section shows documents that match the search tools above.
+        Results appear inside a scrollable area so you can swipe vertically,
+        with quick "back to top / bottom" buttons for long lists. Select Reset Search/Filters to clear your search and return to the default view.
+      </p>
+
+      <!-- Scrollable wrapper for search results -->
+      <div class="results-scroll-wrapper">
+        <!-- I’m hiding this control row by default and only turning it on when real results exist -->
+        <div id="searchScrollControls" class="scroll-controls" style="display:none;">
+          <button
+            type="button"
+            class="nav-button"
+            onclick="scrollSearchResults('start')"
+          >
+            ⬆️ Back to top of results
+          </button>
+          <button
+            type="button"
+            class="nav-button"
+            onclick="scrollSearchResults('end')"
+          >
+            ⬇️ Jump to end of results
+          </button>
+        </div>
+
+        <div id="searchResultsPanel" class="results-scroll-panel">
+          <!-- Search results or placeholder example card will be injected here -->
+          <div id="searchResults"></div>
+        </div>
+      </div>
+
+      <!-- Helper reset button at bottom of search results -->
+      <div style="text-align:center; margin-top: 1rem;">
+        <button
+          type="button"
+          class="results-toggle"
+          onclick="resetSearchAndFilters()"
+        >
+          Reset Search / Filters
+        </button>
+      </div>
+    </section>
+
+    <!-- FULL LIBRARY SECTION -->
+    <div class="section-divider"></div>
+
+    <section>
+      <h2 class="section-heading">Browse through all the files the NMA has collected</h>
+      <p class="section-lead">
+        View every item currently in the NMA Library. This list is also scrollable vertically and comes with the same quick navigation buttons.
+      </p>
+
+      <!-- CTA to reveal full list -->
+      <div style="text-align:center; margin-bottom: 1rem;">
+        <button
+          id="showListBtn"
+          class="results-toggle"
+          type="button"
+          onclick="showFullResults()"
+        >
+          View Full List
+        </button>
+      </div>
+
+      <!-- Full list container (hidden until button is clicked) -->
+      <div id="resultsContainer" style="display: none;">
+        <!-- Hide list button at the top -->
+        <button
+          type="button"
+          onclick="hideFullResults()"
+          class="results-toggle"
+        >
+          Hide List
+        </button>
+
+        <!-- Scrollable wrapper for full list -->
+        <div class="results-scroll-wrapper">
+          <div class="scroll-controls">
+            <button
+              type="button"
+              class="nav-button"
+              onclick="scrollFullList('start')"
+            >
+              ⬆️ Back to top of list
+            </button>
+            <button
+              type="button"
+              class="nav-button"
+              onclick="scrollFullList('end')"
+            >
+              ⬇️ Jump to end of list
+            </button>
+          </div>
+
+          <div id="fullListPanel" class="results-scroll-panel">
+            <!-- All CSV-driven cards get rendered here (no example card) -->
+            <div id="results"></div>
+          </div>
+        </div>
+
+        <!-- Hide list button at the bottom -->
+        <div style="text-align:center; margin-top: 1rem;">
+          <button
+            type="button"
+            onclick="hideFullResults()"
+            class="results-toggle"
+          >
+            Hide List
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAG FILTER SECTION -->
+    <div class="section-divider"></div>
+
+    <section id="tagSection">
+      <h2 class="section-heading">Browse by Tag</h2>
+      <p class="section-lead">
+        Click one or more tags to see files that match those topics.
+        Multiple selected tags will show only files that contain all of them.
+      </p>
+
+      <!-- Tag chips are built here from the CSV "tags" column -->
+      <div class="filters" id="tagFilterRow"></div>
+
+      <!-- I’m wrapping tag results in the same scrollable pattern used above -->
+      <div class="results-scroll-wrapper">
+        <!-- I only show this control bar when there are actual tag results -->
+        <div id="tagScrollControls" class="scroll-controls" style="display:none;">
+          <button
+            type="button"
+            class="nav-button"
+            onclick="scrollTagResults('start')"
+          >
+            ⬆️ Back to top of tag results
+          </button>
+          <button
+            type="button"
+            class="nav-button"
+            onclick="scrollTagResults('end')"
+          >
+            ⬇️ Jump to end of tag results
+          </button>
+        </div>
+
+        <div id="tagResultsPanel" class="results-scroll-panel">
+          <!-- Tag-based results appear here -->
+          <div id="tagResults"></div>
+        </div>
+      </div>
+
+      <p style="max-width: 70ch; color: #777; font-size: 0.9rem; margin: 0.5rem auto 0; text-align:center;">
+        Tip: To clear tags, just click any selected tag again to deselect it.
+      </p>
+    </section>
+  </main>
+
+  <!-- CSV parsing library -->
+  <!-- Future editors: if you move the library from Google Sheets, update CSV_URL below, not this CDN. -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <script>
+    /*
+      Script handles:
+      - Loading the CSV from Google Sheets (CSV_URL)
+      - Rendering the full list
+      - Keyword + A–Z search
+      - Multi-select tag filtering
+      - Placeholder example card in the search results section
+      - Scroll helpers for “back to beginning/end” navigation on long lists
+    */
+
+    // This URL is coming from Google Sheets "Publish to web" (CSV). If the sheet moves or changes,
+    // update this single constant and the front-end will follow.
+    const CSV_URL =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vS39H0IuSeS4LUoyeWP33XNyk58dubD5bu6pVRedMBtOAvapAoYWFXSjdBiagexCA-Djcpn5HwrlnMs/pub?output=csv";
+
+    // Core DOM references
+    const resultsContainerEl = document.getElementById("resultsContainer");
+    const resultsListEl = document.getElementById("results");
+    const showListButtonEl = document.getElementById("showListBtn");
+    const searchInputEl = document.getElementById("searchInput");
+    const resetButtonEl = document.getElementById("resetBtn");
+    const azFilterContainerEl = document.getElementById("azFilter");
+    const tagFilterRowEl = document.getElementById("tagFilterRow");
+    const tagResultsEl = document.getElementById("tagResults");
+
+    // Search results area + section
+    const searchResultsSectionEl = document.getElementById("searchResultsSection");
+    const searchResultsEl = document.getElementById("searchResults");
+    // I’m grabbing the scroll-control rows so I can toggle them on/off based on if results exist
+    const searchScrollControlsEl = document.getElementById("searchScrollControls");
+    const tagScrollControlsEl = document.getElementById("tagScrollControls");
+
+    // Data storage
+    let allRowsFromCsv = [];
+
+    // Filter state
+    let activeAlphabetLetter = null;
+    let selectedTags = new Set();
+
+    /*
+      CSV load and initial setup.
+      Once rows are ready:
+      - render full list (hidden until CTA clicked)
+      - build alphabet filter
+      - build tag chips
+      - show placeholder search example card
+    */
+    fetch(CSV_URL)
+      .then(response => response.text())
+      .then(csvText => {
+        const parsed = Papa.parse(csvText, { header: true });
+
+        allRowsFromCsv = (parsed.data || []).filter(row =>
+          row.file_name || row.file_id || row.link
+        );
+        console.log("Loaded rows from CSV:", allRowsFromCsv.length);
+
+        if (!allRowsFromCsv.length) {
+          searchResultsEl.innerHTML =
+            "<p>No rows were loaded from the CSV. Double-check the sheet is published as CSV and the header names.</p>";
+        }
+
+        // Full list rendering (no example card here)
+        renderFullList(allRowsFromCsv);
+
+        // Build A–Z filter based on first letter of titles
+        buildAlphabetFilter(allRowsFromCsv);
+
+        // Build tag chips from CSV "tags" column
+        buildTagFilterUI(allRowsFromCsv);
+
+        // Initialize the tag area with the "select tags" helper text
+        updateTagResults();
+
+        // Initial search placeholder so users see the example right away
+        renderSearchPlaceholder();
+      })
+      .catch(error => {
+        console.error("Error loading CSV:", error);
+        resultsListEl.innerHTML =
+          "<p>There was a problem loading the document list.</p>";
+        searchResultsEl.innerHTML =
+          "<p>There was a problem loading search results.</p>";
+      });
+
+    /*
+      Convert raw file_name into a human-friendly title:
+      - remove "Copy of"
+      - replace underscores
+      - strip extension
+    */
+    function formatTitleFromFileName(rawFileName) {
+      if (!rawFileName) return "Untitled";
+      return rawFileName
+        .replace(/Copy of /gi, "")
+        .replace(/_/g, " ")
+        .trim();
+    }
+
+    /* Show the full library panel and hide the CTA button */
+    function showFullResults() {
+      resultsContainerEl.style.display = "block";
+      showListButtonEl.style.display = "none";
+    }
+
+    /* Hide the full library panel and show the CTA button again */
+    function hideFullResults() {
+      resultsContainerEl.style.display = "none";
+      showListButtonEl.style.display = "inline-block";
+    }
+
+    /*
+      Render the full list (no example card).
+      This always uses all rows sorted A–Z by title.
+    */
+    function renderFullList(rows) {
+      const sorted = rows.slice().sort((a, b) => {
+        const titleA = formatTitleFromFileName(a.file_name || "");
+        const titleB = formatTitleFromFileName(b.file_name || "");
+        return titleA.localeCompare(titleB);
+      });
+
+      resultsListEl.innerHTML = sorted.map(renderResultCard).join("");
+
+      // Full library is not considered a "filtered" view, so reset button stays hidden here.
+      resetButtonEl.style.display = "none";
+    }
+
+    /*
+      Initial placeholder for the Search Results section.
+      This shows a single example card and message before any search runs.
+    */
+    function renderSearchPlaceholder() {
+      searchResultsSectionEl.style.display = "block";
+
+      // I’m hiding the search scroll buttons here because this is just an example, not real results
+      if (searchScrollControlsEl) {
+        searchScrollControlsEl.style.display = "none";
+      }
+
+      searchResultsEl.innerHTML = `
+        <div class="card">
+          <h3>📎 <a href="#">Example Document Name (this title is also a link)</a></h3>
+          <div class="meta">
+            <small>Source: Example uploader</small>
+            <small>Date: 01/01/2025</small>
+            <span class="tag">Sample Tag</span>
+            <small>Transcript: ✔</small>
+          </div>
+          <p>
+            This is where search results will be displayed. Each document that matches a keyword or A–Z filter
+            will appear in a card like this, with the title acting as a link, source information, tags,
+            transcript indicator, and a short summary or transcript.
+          </p>
+        </div>
+      `;
+    }
+
+    /*
+      Keyword search:
+      Filters across all string fields in each row and renders results into the Search Results section.
+    */
+    function runKeywordSearch() {
+      const query = (searchInputEl.value || "").toLowerCase();
+
+      // If search box is empty, reset back to the default placeholder.
+      if (!query) {
+        resetSearchAndFilters();
+        return;
+      }
+
+      const filtered = allRowsFromCsv.filter(row =>
+        Object.values(row).some(val =>
+          typeof val === "string" && val.toLowerCase().includes(query)
+        )
+      );
+
+      // Search results section is always visible while working with search
+      searchResultsSectionEl.style.display = "block";
+
+      // Hide full list while focused on search
+      resultsContainerEl.style.display = "none";
+      showListButtonEl.style.display = "inline-block";
+
+      // Show reset button near search tools because filters are in use
+      resetButtonEl.style.display = "inline-block";
+
+      if (!filtered.length) {
+        searchResultsEl.innerHTML = "<p>No results found.</p>";
+        // No results means no need for scroll controls, so I hide them here
+        if (searchScrollControlsEl) {
+          searchScrollControlsEl.style.display = "none";
+        }
+        return;
+      }
+
+      const sorted = filtered.slice().sort((a, b) => {
+        const titleA = formatTitleFromFileName(a.file_name || "");
+        const titleB = formatTitleFromFileName(b.file_name || "");
+        return titleA.localeCompare(titleB);
+      });
+
+      searchResultsEl.innerHTML = sorted.map(renderResultCard).join("");
+
+      // At this point I know there are real search results, so I show the scroll buttons
+      if (searchScrollControlsEl) {
+        searchScrollControlsEl.style.display = "flex";
+      }
+    }
+
+    /*
+      Alphabet filter builder:
+      Only letters that actually appear at the start of a title are rendered.
+    */
+    function buildAlphabetFilter(rows) {
+      const letterSet = new Set();
+
+      rows.forEach(row => {
+        const cleanedTitle = formatTitleFromFileName(row.file_name || "");
+        if (!cleanedTitle) return;
+        const firstChar = cleanedTitle.charAt(0).toUpperCase();
+        if (firstChar >= "A" && firstChar <= "Z") {
+          letterSet.add(firstChar);
+        }
+      });
+
+      const letters = Array.from(letterSet).sort();
+      azFilterContainerEl.innerHTML = "";
+
+      if (!letters.length) {
+        azFilterContainerEl.style.display = "none";
+        return;
+      }
+
+      azFilterContainerEl.style.display = "flex";
+
+      letters.forEach(letter => {
+        const span = document.createElement("span");
+        span.textContent = letter;
+        span.className = "chip";
+        span.addEventListener("click", () => filterByAlphabetLetter(letter));
+        azFilterContainerEl.appendChild(span);
+      });
+    }
+
+    /*
+      A–Z filter logic:
+      Clicking a letter shows only titles starting with that letter in the Search Results section.
+    */
+    function filterByAlphabetLetter(letter) {
+      activeAlphabetLetter = letter;
+
+      const filteredRows = allRowsFromCsv.filter(row => {
+        const cleanedTitle = formatTitleFromFileName(row.file_name || "");
+        return cleanedTitle.toUpperCase().startsWith(letter);
+      });
+
+      // Search results section used as the display surface
+      searchResultsSectionEl.style.display = "block";
+
+      // Full list is hidden while A–Z filter is active
+      resultsContainerEl.style.display = "none";
+      showListButtonEl.style.display = "inline-block";
+      resetButtonEl.style.display = "inline-block";
+
+      if (!filteredRows.length) {
+        searchResultsEl.innerHTML =
+          `<p>No results found for titles starting with "${letter}".</p>`;
+        // No results = no reason to show scroll controls
+        if (searchScrollControlsEl) {
+          searchScrollControlsEl.style.display = "none";
+        }
+        return;
+      }
+
+      const sorted = filteredRows.slice().sort((a, b) => {
+        const titleA = formatTitleFromFileName(a.file_name || "");
+        const titleB = formatTitleFromFileName(b.file_name || "");
+        return titleA.localeCompare(titleB);
+      });
+
+      searchResultsEl.innerHTML = sorted.map(renderResultCard).join("");
+
+      // Here I know there are A–Z results, so I enable the scroll buttons
+      if (searchScrollControlsEl) {
+        searchScrollControlsEl.style.display = "flex";
+      }
+    }
+
+    /*
+      Reset all search-related state:
+      - clear the search box
+      - clear active alphabet letter
+      - restore placeholder card in the Search Results section
+      - keep full library collapsed with CTA visible
+    */
+    function resetSearchAndFilters() {
+      searchInputEl.value = "";
+      activeAlphabetLetter = null;
+
+      // Reset search area back to placeholder example card
+      renderSearchPlaceholder();
+
+      // Hide reset button because no active filters remain
+      resetButtonEl.style.display = "none";
+
+      // Make sure search scroll controls are hidden again in this clean state
+      if (searchScrollControlsEl) {
+        searchScrollControlsEl.style.display = "none";
+      }
+
+      // Full list returns to default collapsed state
+      resultsContainerEl.style.display = "none";
+      showListButtonEl.style.display = "inline-block";
+
+      // Re-render full list to ensure clean state
+      renderFullList(allRowsFromCsv);
+    }
+
+    /*
+      Parse tags from the CSV "tags" column.
+      Example format: "[Mooring, PDF, Transcript]" or "[Mooring/PDF/Transcript]".
+    */
+    function parseTagsFromRow(row) {
+      if (!row.tags) return [];
+      const trimmed = row.tags.replace(/[\[\]]/g, "");
+      return trimmed
+        .split(/[,/]/)
+        .map(tag => tag.trim())
+        .filter(Boolean);
+    }
+
+    /*
+      Build the tag chips row from unique tags in the CSV.
+    */
+    function buildTagFilterUI(rows) {
+      const uniqueTags = new Set();
+
+      rows.forEach(row => {
+        parseTagsFromRow(row).forEach(tag => uniqueTags.add(tag));
+      });
+
+      tagFilterRowEl.innerHTML = "";
+
+      const tagsArray = Array.from(uniqueTags).sort();
+
+      tagsArray.forEach(tag => {
+        const span = document.createElement("span");
+        span.textContent = tag;
+        span.className = "chip";
+        span.addEventListener("click", () => handleTagClick(tag, span));
+        tagFilterRowEl.appendChild(span);
+      });
+    }
+
+    /*
+      Handle tag chip toggle:
+      Uses a Set to track currently selected tags, then updates results.
+    */
+    function handleTagClick(tag, chipEl) {
+      if (selectedTags.has(tag)) {
+        selectedTags.delete(tag);
+        chipEl.classList.remove("chip-selected");
+      } else {
+        selectedTags.add(tag);
+        chipEl.classList.add("chip-selected");
+      }
+
+      updateTagResults();
+    }
+
+    /*
+      Render tag-based results with AND logic:
+      A row must contain every selected tag to appear.
+      I also tie this to a scrollable panel + show/hide scroll buttons.
+    */
+    function updateTagResults() {
+      const tagPanel = document.getElementById("tagResultsPanel");
+
+      // If no tags are selected, show helper text and hide scroll controls
+      if (selectedTags.size === 0) {
+        tagResultsEl.innerHTML =
+          "<p>Results will appear below.</p>";
+        if (tagScrollControlsEl) {
+          tagScrollControlsEl.style.display = "none";
+        }
+        // I reset the scroll position so the helper text is visible right away
+        if (tagPanel) {
+          tagPanel.scrollTop = 0;
+        }
+        return;
+      }
+
+      const activeTags = Array.from(selectedTags);
+
+      const rowsWithTags = allRowsFromCsv.filter(row => {
+        const rowTags = parseTagsFromRow(row);
+        if (!rowTags.length) return false;
+        return activeTags.every(tag => rowTags.includes(tag));
+      });
+
+      if (!rowsWithTags.length) {
+        tagResultsEl.innerHTML =
+          "<p>No documents match the selected tag combination.</p>";
+        // No results, so I keep the scroll controls hidden
+        if (tagScrollControlsEl) {
+          tagScrollControlsEl.style.display = "none";
+        }
+        if (tagPanel) {
+          tagPanel.scrollTop = 0;
+        }
+        return;
+      }
+
+      // There ARE tag results, so I render them and show the scroll controls
+      tagResultsEl.innerHTML = rowsWithTags.map(renderResultCard).join("");
+
+      if (tagScrollControlsEl) {
+        tagScrollControlsEl.style.display = "flex";
+      }
+    }
+
+    /*
+      Render a single result card from a CSV row.
+      Same card layout is reused for:
+      - full library list
+      - search results
+      - tag results
+    */
+    /*
+  Render a single result card from a CSV row.
+  Same card layout is reused for:
+  - full library list
+  - search results
+  - tag results
+*/
+function renderResultCard(row) {
+  const title = formatTitleFromFileName(row.file_name || "Untitled");
+
+  const hasTranscript = (row.transcript || "").trim().length > 0;
+  const hasSummary = (row.summary || "").trim().length > 0;
+
+  // I grab the date directly from the CSV row; if it's missing I fall back to a simple message
+  const dateValue = (row.date || "").trim();          // <-- this is the "date" column in the CSV
+  const dateLabel = dateValue || "Date not listed";   // <-- what I show if the cell is empty
+
+  // Prioritize transcript, then summary, then fallback message.
+  let content;
+  if (hasTranscript) {
+    content = row.transcript;
+  } else if (hasSummary) {
+    content = row.summary;
+  } else {
+    content = "No summary/transcript available currently";
+  }
+
+  const parsedTags = parseTagsFromRow(row);
+  const tagsHtml = parsedTags.length
+    ? parsedTags.map(tag => `<span class="tag">${tag}</span>`).join(" ")
+    : `<span class="tag">General</span>`;
+
+  const transcriptStatus = hasTranscript ? "✔" : "✖";
+
+  return `
+    <div class="card">
+      <h3>📎 <a href="${row.link || "#"}" target="_blank" rel="noopener noreferrer">${title}</a></h3>
+      <div class="meta">
+        <small>Source: ${row.author || "Unknown"}</small>
+        <small>Date: ${dateLabel}</small>      <!-- I’m showing the date here -->
+        ${tagsHtml}
+        <small>Transcript: ${transcriptStatus}</small>
+      </div>
+      <p>${content}</p>
+    </div>
+  `;
+}
+
+
+    /*
+      Generic helper to scroll any panel to the top or bottom.
+      Used by:
+      - search results
+      - full list
+      - tag results
+    */
+    function scrollPanel(panelId, position) {
+      const panel = document.getElementById(panelId);
+      if (!panel) return;
+      const top = position === "start" ? 0 : panel.scrollHeight;
+      panel.scrollTo({ top, behavior: "smooth" });
+    }
+
+    /*
+      Hooks for the nav buttons in the Search Results section.
+      They just call scrollPanel with the right ID.
+    */
+    function scrollSearchResults(position) {
+      scrollPanel("searchResultsPanel", position);
+    }
+
+    /*
+      Hooks for the nav buttons in the Full List section.
+    */
+    function scrollFullList(position) {
+      scrollPanel("fullListPanel", position);
+    }
+
+    /*
+      Hooks for the nav buttons in the Tag Results section.
+      This gives tag-based searches the same scroll behavior as the other panels.
+    */
+    function scrollTagResults(position) {
+      scrollPanel("tagResultsPanel", position);
+    }
+  </script>
+</body>
+</html>
+
