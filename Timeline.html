@@ -1,0 +1,555 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NMA Timeline</title>
+  <link rel="icon" href="/assets/nma-favicon.png" />
+
+  <!--
+    Styling aligned with the NMA Search Library page so both pages feel consistent
+    in typography, colors, and card layout.
+  -->
+  <style>
+    /* --------------------------------------------------
+       Global design tokens shared with the search page
+       -------------------------------------------------- */
+    :root {
+      /* Main accent / brand color (matches search library) */
+      --brand-teal: #afdce0;
+      /* Call-to-action color (same as accent for cohesion) */
+      --cta: #afdce0;
+      /* Soft border color used for cards and frames */
+      --border: #d3e8eb;
+      /* Light background for small UI elements */
+      --chip-bg: #f0fafb;
+      /* Darker text color for headings and body for readability */
+      --text-dark: #142129;
+    }
+
+    /* --------------------------------------------------
+       Page-level typography and layout
+       -------------------------------------------------- */
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      background: #fff;
+      color: var(--text-dark);
+    }
+    .page {
+      padding: 1.5rem;
+      max-width: 1100px;
+      margin: auto;
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    /* Big timeline title at the top of the page */
+    h1 {
+      text-align: center;
+      color: var(--text-dark);
+      font-size: 2.3rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Short intro under the main title */
+    .lead {
+      color: #26343c;
+      max-width: 60ch;
+      margin: 0 auto 24px;
+      font-size: 1.05rem;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* Shared section title style */
+    .section-heading {
+      color: var(--text-dark);
+      font-size: 1.8rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 0.3rem;
+    }
+
+    /* Descriptions under section titles */
+    .section-lead {
+      color: #2e3d45;
+      max-width: 70ch;
+      margin: 0 auto 1rem;
+      font-size: 1.05rem;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* Thick horizontal divider between major sections */
+    .section-divider {
+      border-top: 5px solid var(--brand-teal);
+      margin: 2rem 0;
+    }
+
+    /* --------------------------------------------------
+       Button style (matches search library "button-19")
+       -------------------------------------------------- */
+    .button-19 {
+      appearance: button;
+      background-color: #afdce0;
+      border: solid transparent;
+      border-radius: 16px;
+      border-width: 0 0 4px;
+      box-sizing: border-box;
+      color: var(--text-dark);
+      cursor: pointer;
+      display: inline-block;
+      font-family: system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      line-height: 20px;
+      margin: 0;
+      outline: none;
+      overflow: visible;
+      padding: 8px 14px;
+      text-align: center;
+      text-transform: uppercase;
+      touch-action: manipulation;
+      transform: translateZ(0);
+      transition: filter 0.2s;
+      user-select: none;
+      -webkit-user-select: none;
+      vertical-align: middle;
+      white-space: nowrap;
+      position: relative;
+    }
+
+    .button-19:after {
+      background-clip: padding-box;
+      background-color: #afdce0;
+      border: solid transparent;
+      border-radius: 16px;
+      border-width: 0 0 4px;
+      bottom: -4px;
+      content: "";
+      left: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
+      z-index: -1;
+    }
+
+    .button-19,
+    .button-19:focus {
+      user-select: auto;
+    }
+
+    .button-19:hover:not(:disabled) {
+      filter: brightness(1.05);
+      -webkit-filter: brightness(1.05);
+    }
+
+    .button-19:disabled {
+      cursor: auto;
+      opacity: 0.7;
+    }
+
+    .button-19:active {
+      border-width: 4px 0 0;
+      background: none;
+    }
+
+    /* Slight variant for smaller navigation-style buttons */
+    .button-19.small-nav {
+      font-size: 12px;
+      padding: 6px 10px;
+      letter-spacing: 0.06em;
+    }
+
+    /* --------------------------------------------------
+       KnightLab timeline frame (kept as originally structured)
+       -------------------------------------------------- */
+    .timeline-frame {
+      border: 4px solid var(--cta);
+      border-radius: 14px;
+      padding: 1.3rem;
+      background: #f9ffff;
+    }
+    .timeline-frame header h2 {
+      color: var(--text-dark);
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      text-align: center;
+    }
+    .timeline-frame header p {
+      max-width: 70ch;
+      margin: 0.3rem auto 1rem;
+      color: #2e3d45;
+      text-align: center;
+      font-size: 1rem;
+    }
+
+    /* --------------------------------------------------
+       CSV-driven list view container
+       -------------------------------------------------- */
+    .timeline-list-section {
+      border: 4px solid var(--cta);
+      border-radius: 14px;
+      padding: 1.2rem;
+      background: #ffffff;
+    }
+
+    /* Nav row for horizontal scrolling: "back to beginning" / "jump to end" */
+    .scroll-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: flex-end;
+      margin: 0.5rem 0;
+    }
+
+    /* --------------------------------------------------
+       Horizontal strip container for timeline event cards
+       -------------------------------------------------- */
+    .scroll-strip {
+      overflow-x: auto;        /* horizontal scrolling for event cards */
+      overflow-y: hidden;      /* prevent vertical scroll inside this strip */
+      scroll-behavior: smooth; /* smooth scrolling when nav buttons are used */
+      padding-bottom: 0.5rem;
+      box-sizing: border-box;
+    }
+
+    /* The UL that holds all event cards is laid out as a horizontal flex row */
+    .timeline-list {
+      padding: 0;
+      margin: 1rem 0 0;
+      list-style: none;
+      display: flex;
+      flex-wrap: nowrap;
+    }
+
+    /* Each event card in the horizontal strip */
+    .timeline-card {
+      border: 5px solid var(--border);
+      border-left: 5px solid var(--brand-teal);
+      border-radius: 10px;
+      padding: 1rem;
+      background: #fff;
+      margin-right: 1rem;
+      box-sizing: border-box;
+      min-width: 260px;
+      max-width: 320px;
+      flex: 0 0 auto;          /* prevent shrinking; keep cards as tiles in a row */
+      color: var(--text-dark);
+    }
+
+    /* Date at top of each card */
+    .timeline-card-date {
+      margin: 0 0 0.4rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #3a4951;
+    }
+
+    /* Headline of the event */
+    .timeline-card-title {
+      margin: 0 0 0.35rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    /* Main description/content */
+    .timeline-card-text {
+      margin: 0;
+      color: #2e3d45;
+      line-height: 1.5;
+    }
+
+    /* Link row for "open related doc/event" */
+    .timeline-card-link {
+      margin-top: 0.45rem;
+      font-size: 0.9rem;
+    }
+    .timeline-card-link a {
+      color: var(--text-dark);
+      text-decoration: underline;
+    }
+
+    /* Fallback message for empty/failed CSV */
+    .muted {
+      text-align: center;
+      color: #777;
+      font-size: 0.95rem;
+      margin-top: 1rem;
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 600px) {
+      .section-heading { text-align: left; }
+      .section-lead { text-align: left; }
+      .timeline-frame header h2 { text-align: left; }
+      .timeline-frame header p { text-align: left; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+
+    <!-- Page intro -->
+    <h1>NMA Historical Timeline</h1>
+    <p class="lead">
+      Explore key events and policy changes that shaped Newport Harbor.  
+      The interactive timeline comes first, followed by a date-sorted list you can scan horizontally.
+    </p>
+
+    <div class="section-divider"></div>
+
+    <section class="timeline-frame" aria-label="Timeline embed">
+      <header>
+        <h2>Interactive timeline</h2>
+        <p>
+          Drag the bar left/right or use the arrows to move through time. Tap or click any event card
+          for full details. Works on phones, tablets, and desktop.
+        </p>
+      </header>
+      <!-- KnightLab embed: to point at a different KnightLab or Google Sheet,
+           replace the "source=..." argument in this URL and keep the rest. -->
+      <iframe src='https://cdn.knightlab.com/libs/timeline3/latest/embed/index.html?source=v2%3A2PACX-1vRa_n__SZZMkqV10J_cynmYBpDvdkwF10qG22TTjOHiQZqDUnEj945Khxcak10Kw_zgfDKqfkGGRETJ&font=Default&lang=en&initial_zoom=2&width=100%25&height=650' width='100%' height='650' webkitallowfullscreen mozallowfullscreen allowfullscreen frameborder='0'></iframe>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!--
+      CSV-DRIVEN LIST VIEW (Horizontal)
+      Uses the same KnightLab CSV so data only needs to be maintained in one place.
+      Events are sorted by Year / Month / Day and rendered as a horizontal strip of cards.
+    -->
+    <section class="timeline-list-section">
+      <h2 class="section-heading">Timeline Events (List View)</h2>
+      <p class="section-lead">
+        Sorted by date using the <strong>Year</strong>, <strong>Month</strong>, and <strong>Day</strong>.
+        Cards can be scrolled horizontally or navigated with the buttons below.
+      </p>
+
+      <!-- Navigation for the horizontal strip -->
+      <div class="scroll-nav">
+        <button
+          type="button"
+          class="button-19 small-nav"
+          onclick="scrollStrip('timelineListWrapper', 'start')"
+        >
+          Back to beginning
+        </button>
+        <button
+          type="button"
+          class="button-19 small-nav"
+          onclick="scrollStrip('timelineListWrapper', 'end')"
+        >
+          Jump to end
+        </button>
+      </div>
+
+      <!-- Horizontal strip container for timeline cards -->
+      <div id="timelineListWrapper" class="scroll-strip">
+        <!-- Timeline cards are rendered as <li> elements inside this <ul> -->
+        <ul id="timelineList" class="timeline-list"></ul>
+      </div>
+
+      <!-- Fallback message if no timeline entries are available -->
+      <p id="timelineFallback" class="muted" style="display:none;">
+        No timeline entries are available yet. Once the CSV is updated with Headline, Text, date fields, and Link values,
+        this list will populate automatically.
+      </p>
+    </section>
+
+  </main>
+
+  <!-- PapaParse for CSV parsing in the browser -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <script>
+    /* --------------------------------------------------
+       TIMELINE_CSV_URL
+       External data source for the list-view timeline.
+       Update this URL if the KnightLab / Google Sheets
+       CSV location changes.
+       -------------------------------------------------- */
+    const TIMELINE_CSV_URL =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vRa_n__SZZMkqV10J_cynmYBpDvdkwF10qG22TTjOHiQZqDUnEj945Khxcak10Kw_zgfDKqfkGGRETJ/pub?output=csv";
+
+    /* --------------------------------------------------
+       DOM references for the list view
+       -------------------------------------------------- */
+    const timelineListEl = document.getElementById("timelineList");
+    const timelineFallbackEl = document.getElementById("timelineFallback");
+
+    /* --------------------------------------------------
+       In-memory data container for parsed timeline rows
+       Each element will contain:
+       - raw: original CSV row
+       - date: Date object (or null)
+       - headline: trimmed Headline value
+       - bodyText: trimmed Text value
+       - link: external Link to supporting document/event
+       -------------------------------------------------- */
+    let timelineEntries = [];
+
+    /* --------------------------------------------------
+       Month names used to turn numeric month into labels
+       -------------------------------------------------- */
+    const MONTH_NAMES = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+
+    /* --------------------------------------------------
+       Fetch and parse the CSV once, then build the list.
+       -------------------------------------------------- */
+    fetch(TIMELINE_CSV_URL)
+      .then(response => response.text())
+      .then(csvText => {
+        const parsed = Papa.parse(csvText, { header: true });
+
+        // Filter and normalize rows into a more convenient structure
+        timelineEntries = (parsed.data || [])
+          .filter(row => row.Headline)       // ignore empty entries
+          .map((row, index) => {
+            const date = buildDateFromRow(row);
+            const headline = row.Headline && row.Headline.trim()
+              ? row.Headline.trim()
+              : "Untitled event";
+            const bodyText = row.Text && row.Text.trim()
+              ? row.Text.trim()
+              : "No description available yet.";
+
+            // Link column used for external documents or event references
+            const link = row.Link && row.Link.trim()
+              ? row.Link.trim()
+              : "";
+
+            return {
+              raw: row,
+              index,
+              date,
+              headline,
+              bodyText,
+              link
+            };
+          });
+
+        renderTimelineStrip(timelineEntries);
+      })
+      .catch(() => {
+        showFallbackMessage();
+      });
+
+    /* --------------------------------------------------
+       Build a Date object from Year / Month / Day fields
+       Falls back to null if a usable Year is not present.
+       -------------------------------------------------- */
+    function buildDateFromRow(row) {
+      const yearRaw = row["Year"];
+      const monthRaw = row["Month"];
+      const dayRaw = row["Day"];
+
+      const year = parseInt(yearRaw, 10);
+      if (isNaN(year)) return null;
+
+      let month = parseInt(monthRaw, 10);
+      if (isNaN(month) || month < 1 || month > 12) month = 1;
+
+      let day = parseInt(dayRaw, 10);
+      if (isNaN(day) || day < 1 || day > 31) day = 1;
+
+      return new Date(year, month - 1, day);
+    }
+
+    /* --------------------------------------------------
+       Format a Date object as "Month Day, Year"
+       Example: "December 15, 2011"
+       Returns null if no Date is provided.
+       -------------------------------------------------- */
+    function formatTimelineDate(dateObj) {
+      if (!dateObj) return null;
+
+      const year = dateObj.getFullYear();
+      const monthName = MONTH_NAMES[dateObj.getMonth()];
+      const day = dateObj.getDate();
+
+      return `${monthName} ${day}, ${year}`;
+    }
+
+    /* --------------------------------------------------
+       Sort entries by chronological date then render them
+       into a horizontal strip of cards.
+       -------------------------------------------------- */
+    function renderTimelineStrip(entries) {
+      if (!entries || entries.length === 0) {
+        showFallbackMessage();
+        return;
+      }
+
+      // Sort by date (oldest first), with undated entries placed after dated ones
+      const sorted = entries.slice().sort((a, b) => {
+        if (a.date && b.date) return a.date - b.date;
+        if (a.date && !b.date) return -1;
+        if (!a.date && b.date) return 1;
+        return a.index - b.index;
+      });
+
+      // Render each entry as a card
+      timelineListEl.innerHTML = sorted
+        .map(entry => renderTimelineCard(entry))
+        .join("");
+
+      timelineFallbackEl.style.display = "none";
+    }
+
+    /* --------------------------------------------------
+       Render a single timeline card as an <li> element
+       with date, headline, text, and optional link.
+       -------------------------------------------------- */
+    function renderTimelineCard(entry) {
+      const formattedDate = formatTimelineDate(entry.date);
+      const dateLine = formattedDate
+        ? `<p class="timeline-card-date">${formattedDate}</p>`
+        : "";
+
+      const linkHtml = entry.link
+        ? `<p class="timeline-card-link"><a href="${entry.link}" target="_blank" rel="noopener noreferrer">Open related file or link</a></p>`
+        : "";
+
+      return `
+        <li class="timeline-card">
+          ${dateLine}
+          <h3 class="timeline-card-title">${entry.headline}</h3>
+          <p class="timeline-card-text">${entry.bodyText}</p>
+          ${linkHtml}
+        </li>
+      `;
+    }
+
+    /* --------------------------------------------------
+       Fallback display for when timeline data is missing
+       -------------------------------------------------- */
+    function showFallbackMessage() {
+      timelineListEl.innerHTML = "";
+      timelineFallbackEl.style.display = "block";
+    }
+
+    /* --------------------------------------------------
+       Horizontal scroll helper for the event card strip
+       elementId: ID of the scrollable container
+       position: "start" | "end"
+       -------------------------------------------------- */
+    function scrollStrip(elementId, position) {
+      const box = document.getElementById(elementId);
+      if (!box) return;
+
+      const targetLeft = position === "start" ? 0 : box.scrollWidth;
+      box.scrollTo({ left: targetLeft, behavior: "smooth" });
+    }
+  </script>
+</body>
+</html>
