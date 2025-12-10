@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<!-- I’m telling the browser this is an HTML5 document -->
+<html lang="en">
+<head>
+  <!-- set the character encoding so all text renders correctly -->
+  <meta charset="utf-8" />
+  <!-- make the layout responsive for mobile, tablet, and desktop -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- This is the tab title in the browser -->
+  <title>NMA Search</title>
+  <!-- Favicon for the browser tab (update path if needed in the future) -->
+  <link rel="icon" href="/assets/nma-favicon.png" />
+
+  <!-- keep all styling here so this can drop into a GoDaddy HTML block cleanly -->
+  <style>
+    /* --------------------------------------------------
+       Global design tokens: Shared colors here.
+        Update these to change the look and feel
+       -------------------------------------------------- */
+    :root {
+      /* Accent color (aligned with the button color #afdce0) */
+      --brand-teal: #afdce0;
+      /*calls-to-action to keep things cohesive */
+      --cta: #afdce0;
+      /* Softer border color derived from the main accent */
+      --border: #d3e8eb;
+      /* Light background for chips/pills */
+      --chip-bg: #f0fafb;
+      /* Darker text color for headings and key text to improve readability */
+      --text-dark: #142129;
+    }
+
+    /* Base styling for the page */
+    body {
+      font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; /* clean system font */
+      margin: 0;                          /*remove default browser margins */
+      background: #fff;                   /* page background */
+      color: var(--text-dark);           /* use a darker text color for better readability */
+      overflow-x: hidden;                 /* prevent stray horizontal scrolling */
+    }
+
+    /* Main layout wrapper that centers the whole experience */
+    .page {
+      padding: 1.5rem;           /* give the content breathing room */
+      max-width: 1100px;         /* cap the width for readability on large screens */
+      margin: auto;              /* center the container horizontally */
+      box-sizing: border-box;    /* include padding in width calculations */
+      width: 100%;               /* let it stretch to full width up to the max */
+    }
+
+    /* Top-level title */
+    h1 {
+      text-align: center;
+      color: var(--text-dark);   /* use darker text for better contrast */
+      font-size: 2.3rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Introductory description under the main title */
+    .lead {
+      color: #26343c;            /* use a darker gray for easier reading */
+      max-width: 60ch;
+      margin: 0 auto 24px;
+      font-size: 1.05rem;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* Shared style for section headings */
+    .section-heading {
+      color: var(--text-dark);   /* keep headings dark for readability */
+      font-size: 1.8rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 0.3rem;
+    }
+
+    /* Shared style for section descriptions under headings */
+    .section-lead {
+      max-width: 70ch;
+      color: #2e3d45;            /* use a stronger gray to keep text readable */
+      margin: 0 auto 1rem;
+      font-size: 1.05rem;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* Thick divider bar between major sections */
+    .section-divider {
+      border-top: 5px solid var(--brand-teal);
+      margin: 2rem 0;
+    }
+
+    /* Search section box that wraps the search tools */
+    .search-section {
+      border: 4px solid var(--cta);
+      border-radius: 14px;
+      padding: 1.2rem;
+      background: #f9ffff;
+    }
+
+    /* Inner header for the search section */
+    .search-header {
+      border: 3px solid var(--cta);
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      background: #ffffff;
+      margin-bottom: 1rem;
+    }
+
+    /* Collapsible area that holds the search input + A–Z filter */
+    details.search-box {
+      border: 3px solid var(--border);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+
+    /* Label for the collapsible search tools area */
+    summary {
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 1rem;
+      color: var(--text-dark);   /* keep this label dark to be easy to read */
+    }
+
+    /* Layout for the search input and search button row */
+    .search-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Keyword input field */
+    .search-controls input[type="text"] {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      box-sizing: border-box;
+      color: var(--text-dark);  /* keep the typed text dark */
+    }
+
+    /* apply the button-19 visual style to all key buttons
+       (search, reset, nav, show/hide, show more/less) */
+    .button-19 {
+      appearance: button;
+      background-color: #afdce0;   /* main button background color */
+      border: solid transparent;
+      border-radius: 16px;
+      border-width: 0 0 4px;       /* fake “bottom border” for depth */
+      box-sizing: border-box;
+      color: var(--text-dark);     /* dark text for contrast on light background */
+      cursor: pointer;
+      display: inline-block;
+      font-family: system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      line-height: 20px;
+      margin: 0;
+      outline: none;
+      overflow: visible;
+      padding: 10px 16px;
+      text-align: center;
+      text-transform: uppercase;
+      touch-action: manipulation;
+      transform: translateZ(0);
+      transition: filter 0.2s;
+      user-select: none;
+      -webkit-user-select: none;
+      vertical-align: middle;
+      white-space: nowrap;
+      position: relative;          /* needed for the :after “layer” */
+    }
+
+    /* create a second background layer to mimic a raised button */
+    .button-19:after {
+      background-clip: padding-box;
+      background-color: #afdce0;
+      border: solid transparent;
+      border-radius: 16px;
+      border-width: 0 0 4px;
+      bottom: -4px;
+      content: "";
+      left: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
+      z-index: -1;
+    }
+
+    .button-19,
+    .button-19:focus {
+      user-select: auto;
+    }
+
+    /* Hover effect to brighten the button slightly */
+    .button-19:hover:not(:disabled) {
+      filter: brightness(1.05);
+      -webkit-filter: brightness(1.05);
+    }
+
+    .button-19:disabled {
+      cursor: auto;
+      opacity: 0.7;
+    }
+
+    /* Active press: invert the “depth” to feel like a pressed button */
+    .button-19:active {
+      border-width: 4px 0 0;
+      background: none;
+    }
+
+    /* Extra spacing/behavior for the reset/search toggle style buttons */
+    .results-toggle {
+      margin-bottom: 1rem;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    /* Shared layout for A–Z and tag chips rows */
+    .filters,
+    .az {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0 20px;
+    }
+
+    /* Base look for chips (tags and A–Z letters) */
+    .chip,
+    .az span {
+      background: var(--chip-bg);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      color: var(--text-dark); /* keep chip text darker too */
+    }
+
+    /* Visual state for selected chips */
+    .chip-selected {
+      border-color: var(--brand-teal);
+      background: var(--cta);
+      font-weight: 600;
+    }
+
+    /* Card container for each file result */
+    .card {
+      border: 5px solid var(--border);
+      border-left: 5px solid var(--brand-teal);
+      background: #fff;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      margin-right: 1rem;
+      box-sizing: border-box;
+      min-width: 260px;
+      max-width: 320px;
+      flex: 0 0 auto;
+      color: var(--text-dark);  /* ensure card text uses the dark color */
+    }
+
+    /* Card title */
+    .card h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+      color: var(--text-dark);
+    }
+
+    /* Clickable file title */
+    .card h3 a {
+      text-decoration: none;
+      color: var(--text-dark);   /* use dark link color for readability */
+      word-wrap: break-word;
+    }
+
+    .card h3 a:hover {
+      text-decoration: underline;
+    }
+
+    /* Tag pill inside cards */
+    .tag {
+      font-size: 0.75rem;
+      background: var(--cta);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: 999px;
+      color: var(--text-dark);
+    }
+
+    /* Metadata wrapper (source, date, transcript) */
+    .meta {
+      color: #3a4951;            /* slightly darker metadata text */
+      margin-top: 0.5rem;
+    }
+
+    /* Small pill-style meta labels */
+    .meta small {
+      font-size: 0.85rem;
+      background: #f0f0f0;
+      border-radius: 999px;
+      padding: 2px 8px;
+      margin-right: 5px;
+      display: inline-block;
+      color: #303c42;
+    }
+
+    /* This button sits under the search tools and appears only when filters/search are active */
+    .reset-button {
+      display: none;
+      margin-bottom: 1rem;
+    }
+
+    /* Shared scrollable panel for search, full list, and tag strips (horizontal scroll) */
+    .results-scroll-panel {
+      max-height: none;
+      overflow-y: hidden;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      padding-bottom: 0.5rem;
+      box-sizing: border-box;
+      display: flex;
+      flex-wrap: nowrap;
+    }
+
+    /* Wrapper for the scroll controls + strip */
+    .results-scroll-wrapper {
+      margin-top: 1rem;
+    }
+
+    /* Layout for “back to start” and “jump to end” navigation buttons */
+    .scroll-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Additional layout tweaks for navigation-style buttons */
+    .nav-button {
+      flex: 1 1 auto;
+      font-size: 0.95rem;
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.9rem;
+      }
+
+      .section-heading {
+        font-size: 1.5rem;
+        text-align: left;
+      }
+
+      .section-lead {
+        text-align: left;
+        font-size: 0.98rem;
+      }
+
+      .search-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-controls input[type="text"] {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+
+      .filters,
+      .az {
+        justify-content: center;
+      }
+
+      .nav-button {
+        width: 100%;
+      }
+
+      .results-toggle {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Main wrapper for the NMA search component -->
+  <main class="page">
+    <!-- Page title explaining what this tool does -->
+    <h1>Explore our digital library</h1>
+
+    <!-- Brief instructions on how to use the interface -->
+    <p class="lead">
+      Use the tools on this page to look up files related to the marginilization 
+      of the mooring community in Newport Beach.
+      Search by keyword or browse alphabetically at the top of the page. 
+      Browse through the complete library in the center of the page.
+      Display results by choosing tags at the bottom of the page.
+    </p>
+
+    <!-- Visual separation between intro and the search tools -->
+    <div class="section-divider"></div>
+
+    <!-- ========================= -->
+    <!-- SEARCH SECTION STARTS HERE -->
+    <!-- ========================= -->
+    <section class="search-section">
+      <!-- Header inside the search section explaining its purpose -->
+      <div class="search-header">
+        <h2 class="section-heading">Search the NMA Library</h2>
+        <p class="section-lead">
+          Type a keyword and click search, or use the A–Z filter to view titles that start with the specified letter.
+        </p>
+      </div>
+
+      <!-- Collapsible shell for the search input and A–Z tools -->
+      <details class="search-box" open>
+        <summary>Search Tools</summary>
+
+        <!-- Row of keyword input + search button -->
+        <div class="search-controls">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Type what you're looking for here..."
+          >
+          <!-- search  style  -->
+          <button type="button" id="searchBtn" class="button-19">
+            Search
+          </button>
+        </div>
+
+        <!-- A–Z letter chips will be injected here by JavaScript -->
+        <div class="az" id="azFilter"></div>
+      </details>
+
+      <!-- Reset button for clearing keyword + A–Z filters -->
+      <button
+        id="resetBtn"
+        class="button-19 reset-button results-toggle"
+        type="button"
+      >
+        ← Reset Search / Filters
+      </button>
+    </section>
+    <!-- ======================= -->
+    <!-- SEARCH SECTION ENDS HERE -->
+    <!-- ======================= -->
+
+    <!-- Divider between search tools and results -->
+    <div class="section-divider"></div>
+
+    <!-- ============================ -->
+    <!-- SEARCH RESULTS SECTION START -->
+    <!-- ============================ -->
+    <section id="searchResultsSection">
+      <!-- Title for the search results area -->
+      <h2 class="section-heading">Search Results</h2>
+
+      <!-- Explanation of how results are displayed and navigated -->
+      <p class="section-lead">
+        This section shows files that match the search tools above.
+        Results appear in a horizontal strip of cards you can scroll through,
+        with buttons to jump to the start or end. Use Reset Search/Filters to clear your search.
+      </p>
+
+      <!-- Wrapper that holds scroll buttons and the horizontal search results strip -->
+      <div class="results-scroll-wrapper">
+        <!-- Navigation buttons to jump to start/end of the search results strip -->
+        <div id="searchScrollControls" class="scroll-controls" style="display:none;">
+          <button type="button" class="button-19 nav-button" id="searchTopBtn">
+            ⬅️ Back to start of results
+          </button>
+          <button type="button" class="button-19 nav-button" id="searchBottomBtn">
+            ➡️ Jump to end of results
+          </button>
+        </div>
+
+        <!-- Horizontal strip where search result cards will be rendered -->
+        <div id="searchResultsPanel" class="results-scroll-panel"></div>
+      </div>
+
+      <!-- Convenience reset button under the search results strip -->
+      <div style="text-align:center; margin-top: 1rem;">
+        <button
+          type="button"
+          class="button-19 results-toggle"
+          id="searchResetBottomBtn"
+        >
+          Reset Search / Filters
+        </button>
+      </div>
+    </section>
+    <!-- ========================== -->
+    <!-- SEARCH RESULTS SECTION END -->
+    <!-- ========================== -->
+
+    <!-- Divider between search results and full library view -->
+    <div class="section-divider"></div>
+
+    <!-- =========================== -->
+    <!-- FULL LIBRARY SECTION START  -->
+    <!-- =========================== -->
+    <section>
+      <!-- Heading for full library browsing -->
+      <h2 class="section-heading">Browse the Full Digital Library</h2>
+
+      <!-- Description of what the full library view shows -->
+      <p class="section-lead">
+        View every item currently in the NMA Library. The list is a horizontal strip of cards
+        you can scroll through, with buttons to jump to the start or end.
+      </p>
+
+      <!-- Button that reveals the full list strip -->
+      <div style="text-align:center; margin-bottom: 1rem;">
+        <button
+          id="showListBtn"
+          class="button-19 results-toggle"
+          type="button"
+        >
+          View Full List
+        </button>
+      </div>
+
+      <!-- Container for the full list strip (hidden until opened) -->
+      <div id="resultsContainer" style="display: none;">
+        <!-- Hide button at the top of the full list section -->
+        <button
+          type="button"
+          id="hideListTopBtn"
+          class="button-19 results-toggle"
+        >
+          Hide List
+        </button>
+
+        <!-- Wrapper for full-list navigation + strip -->
+        <div class="results-scroll-wrapper">
+          <!-- Navigation buttons to jump along the full list strip -->
+          <div class="scroll-controls">
+            <button
+              type="button"
+              class="button-19 nav-button"
+              id="fullTopBtn"
+            >
+              ⬅️ Back to start of list
+            </button>
+            <button
+              type="button"
+              class="button-19 nav-button"
+              id="fullBottomBtn"
+            >
+              ➡️ Jump to end of list
+            </button>
+          </div>
+
+          <!-- Horizontal strip where all library cards will be rendered -->
+          <div id="fullListPanel" class="results-scroll-panel"></div>
+        </div>
+
+        <!-- Hide button at the bottom of the full list section -->
+        <div style="text-align:center; margin-top: 1rem;">
+          <button
+            type="button"
+            id="hideListBottomBtn"
+            class="button-19 results-toggle"
+          >
+            Hide List
+          </button>
+        </div>
+      </div>
+    </section>
+    <!-- ========================= -->
+    <!-- FULL LIBRARY SECTION END  -->
+    <!-- ========================= -->
+
+    <!-- Divider between full library and tag browsing -->
+    <div class="section-divider"></div>
+
+    <!-- ========================== -->
+    <!-- TAG FILTER SECTION START   -->
+    <!-- ========================== -->
+    <section id="tagSection">
+      <!-- Heading for tag-based exploration -->
+      <h2 class="section-heading">Browse by Tag</h2>
+
+      <!-- Description explaining how multi-tag filtering works -->
+      <p class="section-lead">
+        Click one or more tags to see files that match those topics.
+        Multiple selected tags will show only files that contain all of them.
+      </p>
+
+      <!-- Tag chips will be created here from the CSV "tags" column -->
+      <div class="filters" id="tagFilterRow"></div>
+
+      <!-- Wrapper for tag results strip + navigation -->
+      <div class="results-scroll-wrapper">
+        <!-- Navigation buttons for the tag results strip -->
+        <div id="tagScrollControls" class="scroll-controls" style="display:none;">
+          <button
+            type="button"
+            class="button-19 nav-button"
+            id="tagTopBtn"
+          >
+            ⬅️ Back to start of tag results
+          </button>
+          <button
+            type="button"
+            class="button-19 nav-button"
+            id="tagBottomBtn"
+          >
+            ➡️ Jump to end of tag results
+          </button>
+        </div>
+
+        <!-- Horizontal strip where tag-filtered cards will appear -->
+        <div id="tagResultsPanel" class="results-scroll-panel"></div>
+      </div>
+
+      <!-- Small note on how to clear tag filters -->
+      <p style="max-width: 70ch; color: #3a4951; font-size: 0.9rem; margin: 0.5rem auto 0; text-align:center;">
+        Tip: To clear tags, just click any selected tag again to deselect it.
+      </p>
+    </section>
+    <!-- ======================== -->
+    <!-- TAG FILTER SECTION END   -->
+    <!-- ======================== -->
+  </main>
+
+  <!-- load PapaParse from a CDN to parse the CSV from Google Sheets -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <!-- All interactive behavior for this page lives in this script -->
+  <script>
+    /* --------------------------------------------------
+       CSV_URL: This is the published-to-web CSV link
+       from Google Sheets. When the sheet location or
+       source changes in the future, update ONLY this
+       constant so the rest of the interface keeps
+       working without code changes.
+       -------------------------------------------------- */
+    const CSV_URL =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vS39H0IuSeS4LUoyeWP33XNyk58dubD5bu6pVRedMBtOAvapAoYWFXSjdBiagexCA-Djcpn5HwrlnMs/pub?output=csv";
+
+    /* --------------------------------------------------
+       MAX_CONTENT_LENGTH: If a transcript or summary
+       is longer than this many characters, collapse
+       it by default and show a “Show more / Show less”
+       toggle inside the card so users aren’t hit with
+       a wall of text.
+       -------------------------------------------------- */
+    const MAX_CONTENT_LENGTH = 300;
+
+    // DOM references for major sections and panels
+    const resultsContainerEl = document.getElementById("resultsContainer");
+    const fullListPanelEl = document.getElementById("fullListPanel");
+    const showListButtonEl = document.getElementById("showListBtn");
+    const searchInputEl = document.getElementById("searchInput");
+    const resetButtonEl = document.getElementById("resetBtn");
+    const azFilterContainerEl = document.getElementById("azFilter");
+    const tagFilterRowEl = document.getElementById("tagFilterRow");
+    const searchResultsSectionEl = document.getElementById("searchResultsSection");
+    const searchResultsPanelEl = document.getElementById("searchResultsPanel");
+    const tagResultsPanelEl = document.getElementById("tagResultsPanel");
+    const searchScrollControlsEl = document.getElementById("searchScrollControls");
+    const tagScrollControlsEl = document.getElementById("tagScrollControls");
+
+    // In-memory data arrays and state flags
+    let allRowsFromCsv = [];
+    let sortedRows = [];
+    let activeAlphabetLetter = null;
+    let selectedTags = new Set();
+
+    // parse the "tags" field from a CSV row into a clean array of tags
+    function parseTags(rawTags) {
+      if (!rawTags) return [];
+      return rawTags
+        .replace(/[\[\]]/g, "")
+        .split(/[,/]/)
+        .map(t => t.trim())
+        .filter(Boolean);
+    }
+
+    // convert the raw file name into a human-friendly title
+    function formatTitleFromFileName(rawFileName) {
+      if (!rawFileName) return "Untitled";
+      return rawFileName
+        .replace(/Copy of /gi, "")
+        .replace(/_/g, " ")
+        .trim();
+    }
+
+    // build a single lowercase search string per row for fast keyword matching
+    function buildSearchText(row) {
+      return Object.values(row)
+        .filter(v => typeof v === "string")
+        .join(" | ")
+        .toLowerCase();
+    }
+
+    // fetch and parse the CSV, then set up all the Upieces
+    fetch(CSV_URL)
+      .then(response => response.text())
+      .then(csvText => {
+        const parsed = Papa.parse(csvText, { header: true });
+
+        const rows = (parsed.data || []).filter(row =>
+          row.file_name || row.file_id || row.link
+        );
+
+        allRowsFromCsv = rows.map(row => {
+          const title = formatTitleFromFileName(row.file_name || "");
+          const tagsArray = parseTags(row.tags || "");
+          const searchText = buildSearchText(row);
+          return { ...row, title, tagsArray, searchText };
+        });
+
+        sortedRows = allRowsFromCsv.slice().sort((a, b) =>
+          a.title.localeCompare(b.title)
+        );
+
+        if (!sortedRows.length) {
+          searchResultsPanelEl.innerHTML =
+            "<div class='card'><p>No rows were loaded from the CSV. Please confirm the sheet is published as CSV and the headers are correct.</p></div>";
+          return;
+        }
+
+        renderFullList(sortedRows);
+        buildAlphabetFilter(sortedRows);
+        buildTagFilterUI(sortedRows);
+        updateTagResults();
+        renderSearchPlaceholder();
+      })
+      .catch(() => {
+        fullListPanelEl.innerHTML =
+          "<div class='card'><p>There was a problem loading the library.</p></div>";
+        searchResultsPanelEl.innerHTML =
+          "<div class='card'><p>There was a problem loading search results.</p></div>";
+      });
+
+    // show the full library strip and hide the “View Full List” button
+    function showFullResults() {
+      resultsContainerEl.style.display = "block";
+      showListButtonEl.style.display = "none";
+    }
+
+    // hide the full library strip and bring back the “View Full List” button
+    function hideFullResults() {
+      resultsContainerEl.style.display = "none";
+      showListButtonEl.style.display = "inline-block";
+    }
+
+    // render the full library into the horizontal strip
+    function renderFullList(rows) {
+      fullListPanelEl.innerHTML = rows.map(renderResultCard).join("");
+      resetButtonEl.style.display = "none";
+    }
+
+    // show a sample/example card in the search results area before any search runs
+    function renderSearchPlaceholder() {
+      searchResultsSectionEl.style.display = "block";
+      if (searchScrollControlsEl) searchScrollControlsEl.style.display = "none";
+
+      searchResultsPanelEl.innerHTML = `
+        <div class="card">
+          <h3>📎 File Name (Names are links too!)</h3>
+          <div class="meta">
+            <small>Source: Example uploader</small>
+            <small>Date: 01/01/2025</small>
+            <span class="tag">Sample Tag</span>
+            <small>Transcript: ✔</small>
+          </div>
+          <p>
+            This is where search results will be displayed. Each file that matches a keyword or A–Z filter
+            will appear in a card like this, with the title acting as a link, source information, tags,
+            transcript indicator, and a short summary or transcript.
+          </p>
+        </div>
+      `;
+    }
+
+    // handle keyword searches for the search bar
+    function runKeywordSearch() {
+      const query = (searchInputEl.value || "").toLowerCase().trim();
+
+      if (!query) {
+        resetSearchAndFilters();
+        return;
+      }
+
+      const filtered = allRowsFromCsv.filter(row =>
+        row.searchText.includes(query)
+      );
+
+      searchResultsSectionEl.style.display = "block";
+      resultsContainerEl.style.display = "none";
+      showListButtonEl.style.display = "inline-block";
+      resetButtonEl.style.display = "inline-block";
+
+      if (!filtered.length) {
+        searchResultsPanelEl.innerHTML =
+          "<div class='card'><p>No results found.</p></div>";
+        if (searchScrollControlsEl) searchScrollControlsEl.style.display = "none";
+        return;
+      }
+
+      const sorted = filtered.slice().sort((a, b) =>
+        a.title.localeCompare(b.title)
+      );
+
+      searchResultsPanelEl.innerHTML = sorted.map(renderResultCard).join("");
+      if (searchScrollControlsEl) searchScrollControlsEl.style.display = "flex";
+    }
+
+    //  A–Z chips based on which letters actually appear as first letters of titles
+    function buildAlphabetFilter(rows) {
+      const letterSet = new Set();
+
+      rows.forEach(row => {
+        if (!row.title) return;
+        const firstChar = row.title.charAt(0).toUpperCase();
+        if (firstChar >= "A" && firstChar <= "Z") {
+          letterSet.add(firstChar);
+        }
+      });
+
+      const letters = Array.from(letterSet).sort();
+      azFilterContainerEl.innerHTML = "";
+
+      if (!letters.length) {
+        azFilterContainerEl.style.display = "none";
+        return;
+      }
+
+      azFilterContainerEl.style.display = "flex";
+
+      letters.forEach(letter => {
+        const span = document.createElement("span");
+        span.textContent = letter;
+        span.className = "chip";
+        span.addEventListener("click", () => filterByAlphabetLetter(letter));
+        azFilterContainerEl.appendChild(span);
+      });
+    }
+
+    // filter titles by the selected A–Z letter and show them in the search results area
+    function filterByAlphabetLetter(letter) {
+      activeAlphabetLetter = letter;
+
+      const filteredRows = sortedRows.filter(row =>
+        row.title.toUpperCase().startsWith(letter)
+      );
+
+      searchResultsSectionEl.style.display = "block";
+      resultsContainerEl.style.display = "none";
+      showListButtonEl.style.display = "inline-block";
+      resetButtonEl.style.display = "inline-block";
+
+      if (!filteredRows.length) {
+        searchResultsPanelEl.innerHTML =
+          `<div class='card'><p>No results found for titles starting with "${letter}".</p></div>`;
+        if (searchScrollControlsEl) searchScrollControlsEl.style.display = "none";
+        return;
+      }
+
+      searchResultsPanelEl.innerHTML = filteredRows.map(renderResultCard).join("");
+      if (searchScrollControlsEl) searchScrollControlsEl.style.display = "flex";
+    }
+
+    // reset all search-related state back to the initial “fresh” view
+    function resetSearchAndFilters() {
+      searchInputEl.value = "";
+      activeAlphabetLetter = null;
+
+      renderSearchPlaceholder();
+      resetButtonEl.style.display = "none";
+      if (searchScrollControlsEl) searchScrollControlsEl.style.display = "none";
+
+      resultsContainerEl.style.display = "none";
+      showListButtonEl.style.display = "inline-block";
+
+      renderFullList(sortedRows);
+    }
+
+    // build the tag chips row from all unique tags in the data
+    function buildTagFilterUI(rows) {
+      const uniqueTags = new Set();
+
+      rows.forEach(row => {
+        row.tagsArray.forEach(tag => uniqueTags.add(tag));
+      });
+
+      tagFilterRowEl.innerHTML = "";
+
+      const tagsArray = Array.from(uniqueTags).sort();
+
+      tagsArray.forEach(tag => {
+        const span = document.createElement("span");
+        span.textContent = tag;
+        span.className = "chip";
+        span.addEventListener("click", () => handleTagClick(tag, span));
+        tagFilterRowEl.appendChild(span);
+      });
+    }
+
+    // toggle a tag on/off in the filter set and refresh the tag results strip
+    function handleTagClick(tag, chipEl) {
+      if (selectedTags.has(tag)) {
+        selectedTags.delete(tag);
+        chipEl.classList.remove("chip-selected");
+      } else {
+        selectedTags.add(tag);
+        chipEl.classList.add("chip-selected");
+      }
+
+      updateTagResults();
+    }
+
+    // compute and render tag-based results using AND logic for selected tags
+    function updateTagResults() {
+      const tagPanel = tagResultsPanelEl;
+
+      if (selectedTags.size === 0) {
+        tagResultsPanelEl.innerHTML =
+          "<div class='card'><p>Results will appear below.</p></div>";
+        if (tagScrollControlsEl) tagScrollControlsEl.style.display = "none";
+        if (tagPanel) tagPanel.scrollLeft = 0;
+        return;
+      }
+
+      const activeTags = Array.from(selectedTags);
+
+      const rowsWithTags = allRowsFromCsv.filter(row => {
+        const rowTags = row.tagsArray;
+        if (!rowTags.length) return false;
+        return activeTags.every(tag => rowTags.includes(tag));
+      });
+
+      if (!rowsWithTags.length) {
+        tagResultsPanelEl.innerHTML =
+          "<div class='card'><p>No documents match the selected tag combination.</p></div>";
+        if (tagScrollControlsEl) tagScrollControlsEl.style.display = "none";
+        if (tagPanel) tagPanel.scrollLeft = 0;
+        return;
+      }
+
+      tagResultsPanelEl.innerHTML = rowsWithTags.map(renderResultCard).join("");
+      if (tagScrollControlsEl) tagScrollControlsEl.style.display = "flex";
+    }
+
+    // generate a single card’s HTML from a CSV row, including collapsible long text
+    function renderResultCard(row) {
+      const title = row.title || "Untitled";
+      const hasTranscript = (row.transcript || "").trim().length > 0;
+      const hasSummary = (row.summary || "").trim().length > 0;
+
+      const dateValue = (row.date || "").trim();
+      const dateLabel = dateValue || "Date not listed";
+
+      let content;
+      if (hasTranscript) {
+        content = row.transcript;
+      } else if (hasSummary) {
+        content = row.summary;
+      } else {
+        content = "No summary/transcript available currently";
+      }
+
+      const tagsHtml = row.tagsArray.length
+        ? row.tagsArray.map(tag => `<span class="tag">${tag}</span>`).join(" ")
+        : `<span class="tag">General</span>`;
+
+      const transcriptStatus = hasTranscript ? "✔" : "✖";
+      const link = row.link || "#";
+
+      const isLong = typeof content === "string" && content.length > MAX_CONTENT_LENGTH;
+
+      if (!isLong) {
+        return `
+          <div class="card">
+            <h3>📎 <a href="${link}" target="_blank" rel="noopener noreferrer">${title}</a></h3>
+            <div class="meta">
+              <small>Source: ${row.author || "Unknown"}</small>
+              <small>Date: ${dateLabel}</small>
+              ${tagsHtml}
+              <small>Transcript: ${transcriptStatus}</small>
+            </div>
+            <p>${content}</p>
+          </div>
+        `;
+      }
+
+      const shortText = content.slice(0, MAX_CONTENT_LENGTH) + "…";
+
+      return `
+        <div class="card">
+          <h3>📎 <a href="${link}" target="_blank" rel="noopener noreferrer">${title}</a></h3>
+          <div class="meta">
+            <small>Source: ${row.author || "Unknown"}</small>
+            <small>Date: ${dateLabel}</small>
+            ${tagsHtml}
+            <small>Transcript: ${transcriptStatus}</small>
+          </div>
+
+          <!-- Short preview shown by default -->
+          <p class="card-text-short">${shortText}</p>
+
+          <!-- Full text hidden until the user expands it -->
+          <p class="card-text-full" style="display:none;">${content}</p>
+
+          <!-- Show more / Show less toggle for long content -->
+          <button
+            type="button"
+            class="button-19"
+            onclick="toggleCardContent(this)"
+          >
+            Show more
+          </button>
+        </div>
+      `;
+    }
+
+    // toggle between the short preview and the full text inside a given card
+    function toggleCardContent(button) {
+      const card = button.closest(".card");
+      if (!card) return;
+
+      const shortEl = card.querySelector(".card-text-short");
+      const fullEl = card.querySelector(".card-text-full");
+      if (!shortEl || !fullEl) return;
+
+      const isExpanded = fullEl.style.display !== "none";
+
+      if (isExpanded) {
+        fullEl.style.display = "none";
+        shortEl.style.display = "block";
+        button.textContent = "Show more";
+      } else {
+        fullEl.style.display = "block";
+        shortEl.style.display = "none";
+        button.textContent = "Show less";
+      }
+    }
+
+    // scroll a horizontal strip (panel) to either the start or the end
+    function scrollPanel(panelId, position) {
+      const panel = document.getElementById(panelId);
+      if (!panel) return;
+
+      const left = position === "start" ? 0 : panel.scrollWidth;
+      panel.scrollTo({ left, behavior: "smooth" });
+    }
+
+    // wire up all the click and key event handlers for the interface
+    function attachEventHandlers() {
+      document.getElementById("searchBtn")?.addEventListener("click", runKeywordSearch);
+
+      searchInputEl?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") runKeywordSearch();
+      });
+
+      resetButtonEl?.addEventListener("click", resetSearchAndFilters);
+      document.getElementById("searchResetBottomBtn")?.addEventListener("click", resetSearchAndFilters);
+
+      showListButtonEl?.addEventListener("click", showFullResults);
+      document.getElementById("hideListTopBtn")?.addEventListener("click", hideFullResults);
+      document.getElementById("hideListBottomBtn")?.addEventListener("click", hideFullResults);
+
+      document.getElementById("searchTopBtn")?.addEventListener("click", () =>
+        scrollPanel("searchResultsPanel", "start")
+      );
+      document.getElementById("searchBottomBtn")?.addEventListener("click", () =>
+        scrollPanel("searchResultsPanel", "end")
+      );
+
+      document.getElementById("fullTopBtn")?.addEventListener("click", () =>
+        scrollPanel("fullListPanel", "start")
+      );
+      document.getElementById("fullBottomBtn")?.addEventListener("click", () =>
+        scrollPanel("fullListPanel", "end")
+      );
+
+      document.getElementById("tagTopBtn")?.addEventListener("click", () =>
+        scrollPanel("tagResultsPanel", "start")
+      );
+      document.getElementById("tagBottomBtn")?.addEventListener("click", () =>
+        scrollPanel("tagResultsPanel", "end")
+      );
+    }
+
+    // call this once so everything is interactive right away
+    attachEventHandlers();
+  </script>
+</body>
+</html>
