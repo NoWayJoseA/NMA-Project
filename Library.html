@@ -1,0 +1,1412 @@
+
+<!DOCTYPE html>
+<!-- I’m telling the browser this is an HTML5 document -->
+<html lang="en">
+<head>
+  <!-- set the character encoding so all text renders correctly -->
+  <meta charset="utf-8" />
+  <!-- make the layout responsive for mobile, tablet, and desktop -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- This is the tab title in the browser -->
+  <title>NMA Search</title>
+  <!-- Favicon for the browser tab (update path if needed in the future) -->
+  <link rel="icon" href="/assets/nma-favicon.png" />
+
+  <style>
+    /* --------------------------------------------------
+       Global design tokens: Shared colors here.
+       👉 IMPORTANT FOR FUTURE HANDLERS:
+       If you want to re-theme the whole page, change these.
+       -------------------------------------------------- */
+    :root {
+      --brand-teal: #afdce0;   /* main accent */
+      --cta: #afdce0;          /* buttons + highlights */
+      --border: #d3e8eb;       /* soft border color */
+      --chip-bg: #f0fafb;      /* light chip background */
+      --text-dark: #142129;    /* main text color */
+      --muted-text: #2e3d45;   /* softer paragraph text */
+      --soft-bg: #f9ffff;      /* gentle section background */
+      --focus: #0b57d0;        /* visible keyboard focus ring */
+    }
+
+    /* Base styling for the page */
+    body {
+      font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; /* readable font stack */
+      margin: 0;                /* no default browser margins */
+      background: #fff;         /* white background */
+      color: var(--text-dark);  /* default text */
+      overflow-x: hidden;       /* no random sideways scroll */
+    }
+
+    /* Main wrapper that centers everything */
+    .page {
+      padding: 1.5rem;         /* breathing room */
+      max-width: 1100px;       /* keep line length readable */
+      margin: auto;            /* center it */
+      box-sizing: border-box;  /* padding counts in width */
+      width: 100%;             /* responsive width */
+    }
+
+    /* Main title */
+    h1 {
+      text-align: center;      /* centered heading */
+      color: var(--text-dark);
+      font-size: 2.3rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Intro paragraph */
+    .lead {
+      color: #26343c;          /* slightly softer than pure black */
+      max-width: 60ch;         /* comfortable reading width */
+      margin: 0 auto 24px;     /* center + bottom spacing */
+      font-size: 1.05rem;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* Section heading */
+    .section-heading {
+      color: var(--text-dark);
+      font-size: 1.8rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 0.3rem;
+    }
+
+    /* Section description text */
+    .section-lead {
+      max-width: 70ch;
+      color: var(--muted-text);
+      margin: 0 auto 1rem;
+      font-size: 1.05rem;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* Thick divider */
+    .section-divider {
+      border-top: 5px solid var(--brand-teal);
+      margin: 2rem 0;
+    }
+
+    /* Search section container */
+    .search-section {
+      border: 4px solid var(--cta);
+      border-radius: 14px;
+      padding: 1.2rem;
+      background: var(--soft-bg);
+    }
+
+    /* Search section header box */
+    .search-header {
+      border: 3px solid var(--cta);
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      background: #ffffff;
+      margin-bottom: 1rem;
+    }
+
+    /* Collapsible search tools container */
+    details.search-box {
+      border: 3px solid var(--border);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    /* Summary header (the clickable thing for details) */
+    summary {
+      font-weight: 800;
+      cursor: pointer;
+      margin-bottom: 0.75rem;
+      color: var(--text-dark);
+      outline: none; /* we handle focus styles below */
+      list-style: none; /* hides default marker in some browsers */
+      display: flex;     /* lets us align arrow + text nicely */
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Hide the built-in marker for WebKit browsers so we can use our own arrow */
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    /* Accessibility: clear focus rings for keyboard users */
+    summary:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    a:focus-visible,
+    .chip:focus-visible,
+    .az span:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    /* The little arrow icon we control (rotates on open/close) */
+    .disclosure-arrow {
+      display: inline-block;        /* so rotation works */
+      width: 1.1rem;                /* consistent space */
+      text-align: center;           /* center arrow */
+      transform: rotate(-90deg);    /* collapsed = pointing right-ish */
+      transition: transform 0.2s;   /* smooth flip */
+      font-weight: 900;
+    }
+
+    /* When details is open, rotate arrow down */
+    details[open] .disclosure-arrow {
+      transform: rotate(0deg);
+    }
+
+    /* A little note telling people it’s collapsed and must be opened */
+    .collapsed-note {
+      border: 2px dashed var(--border); /* dashed border = “hey notice me” */
+      border-radius: 10px;
+      background: #ffffff;
+      padding: 0.75rem 1rem;
+      margin: 0 0 1rem;
+      color: var(--muted-text);
+      line-height: 1.45;
+    }
+
+    /* Instruction panel inside toolbox */
+    .tool-instructions {
+      border: 2px solid var(--border);
+      background: var(--soft-bg);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      margin: 0 0 1rem;
+
+      /* ✅ Fix from screenshot: don’t let this shrink weirdly */
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* Instruction title */
+    .tool-instructions h3 {
+      margin: 0 0 0.35rem;
+      font-size: 1.05rem;
+      color: var(--text-dark);
+    }
+
+    /* Instruction text */
+    .tool-instructions p {
+      margin: 0;
+      color: var(--muted-text);
+      line-height: 1.55;
+
+      /* ✅ Fix from screenshot: wrap nicely on narrow screens */
+      overflow-wrap: anywhere;
+      word-break: normal;
+      hyphens: auto;
+    }
+
+    /* Visual separators between tool groups */
+    .tool-separator {
+      border-top: 3px solid var(--border);
+      margin: 1rem 0;
+    }
+
+    /* Grouping for screen readers + visual clarity */
+    fieldset.tool-group {
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      margin: 0;
+      background: #fff;
+    }
+
+    /* Add spacing between fieldsets */
+    fieldset.tool-group + fieldset.tool-group {
+      margin-top: 1rem;
+    }
+
+    /* Legend label for each tool group */
+    legend {
+      font-weight: 800;
+      padding: 0 0.5rem;
+      color: var(--text-dark);
+    }
+
+    /* Label above inputs (more accessible than placeholder-only) */
+    .field-label {
+      display: block;
+      font-weight: 700;
+      margin-top: 0.25rem;
+      margin-bottom: 0.35rem;
+      color: var(--text-dark);
+    }
+
+    /* Keyword input + search button row */
+    .search-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    /* Keyword input field */
+    .search-controls input[type="text"] {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 2px solid #cbd5d8;
+      font-size: 1rem;
+      box-sizing: border-box;
+      color: var(--text-dark);
+    }
+
+    /* Help text under tools */
+    .help-text {
+      margin: 0.35rem 0 0;
+      font-size: 0.95rem;
+      color: var(--muted-text);
+      line-height: 1.4;
+    }
+
+    /* Main button style (matches your existing vibe) */
+    .button-19 {
+      appearance: button;
+      background-color: #afdce0;
+      border: solid transparent;
+      border-radius: 16px;
+      border-width: 0 0 4px;
+      box-sizing: border-box;
+      color: var(--text-dark);
+      cursor: pointer;
+      display: inline-block;
+      font-family: system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      line-height: 20px;
+      margin: 0;
+      outline: none;
+      overflow: visible;
+      padding: 10px 16px;
+      text-align: center;
+      text-transform: uppercase;
+      touch-action: manipulation;
+      transform: translateZ(0);
+      transition: filter 0.2s;
+      user-select: none;
+      -webkit-user-select: none;
+      vertical-align: middle;
+      white-space: nowrap;
+      position: relative;
+    }
+
+    /* Fake depth layer */
+    .button-19:after {
+      background-clip: padding-box;
+      background-color: #afdce0;
+      border: solid transparent;
+      border-radius: 16px;
+      border-width: 0 0 4px;
+      bottom: -4px;
+      content: "";
+      left: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
+      z-index: -1;
+    }
+
+    /* Hover pop */
+    .button-19:hover:not(:disabled) {
+      filter: brightness(1.05);
+      -webkit-filter: brightness(1.05);
+    }
+
+    /* Disabled look */
+    .button-19:disabled {
+      cursor: auto;
+      opacity: 0.7;
+    }
+
+    /* Press look */
+    .button-19:active {
+      border-width: 4px 0 0;
+      background: none;
+    }
+
+    /* Reset/show/hide style buttons */
+    .results-toggle {
+      margin-bottom: 1rem;
+      width: 100%;
+      max-width: 340px;
+    }
+
+    /* A–Z and Tag chip rows */
+    .filters,
+    .az {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0 0;
+    }
+
+    /* Chip style */
+    .chip,
+    .az span {
+      background: var(--chip-bg);
+      border: 2px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      color: var(--text-dark);
+    }
+
+    /* Selected chip */
+    .chip-selected {
+      border-color: var(--brand-teal);
+      background: var(--cta);
+      font-weight: 800;
+    }
+
+    /* Status banner for “waiting/ready” */
+    .status-banner {
+      border: 3px solid var(--border);
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+
+    /* Little dot (changes color based on state) */
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      margin-top: 0.35rem;
+      background: #b8c4c8;
+      flex: 0 0 auto;
+    }
+
+    /* Waiting look */
+    .status-waiting .status-dot { background: #b8c4c8; }
+    /* Ready look */
+    .status-active .status-dot { background: #0f9d58; }
+
+    /* Status banner text */
+    .status-text {
+      margin: 0;
+      color: var(--muted-text);
+      line-height: 1.4;
+    }
+
+    /* Bold emphasis inside status */
+    .status-text strong {
+      color: var(--text-dark);
+    }
+
+    /* Result cards */
+    .card {
+      border: 5px solid var(--border);
+      border-left: 5px solid var(--brand-teal);
+      background: #fff;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      margin-right: 1rem;
+      box-sizing: border-box;
+      min-width: 260px;
+      max-width: 320px;
+      flex: 0 0 auto;
+      color: var(--text-dark);
+    }
+
+    /* Card heading */
+    .card h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+      color: var(--text-dark);
+    }
+
+    /* Card link */
+    .card h3 a {
+      text-decoration: none;
+      color: var(--text-dark);
+      word-wrap: break-word;
+    }
+
+    /* Link hover */
+    .card h3 a:hover {
+      text-decoration: underline;
+    }
+
+    /* Tag pill inside cards */
+    .tag {
+      font-size: 0.75rem;
+      background: var(--cta);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: 999px;
+      color: var(--text-dark);
+      margin-right: 6px;
+      display: inline-block;
+      margin-top: 6px;
+    }
+
+    /* Card metadata wrapper */
+    .meta {
+      color: #3a4951;
+      margin-top: 0.5rem;
+    }
+
+    /* Meta chips */
+    .meta small {
+      font-size: 0.85rem;
+      background: #f0f0f0;
+      border-radius: 999px;
+      padding: 2px 8px;
+      margin-right: 5px;
+      display: inline-block;
+      color: #303c42;
+    }
+
+    /* Reset button hidden until a search/filter is active */
+    .reset-button {
+      display: none;
+      margin-bottom: 1rem;
+    }
+
+    /* Horizontal strip for results */
+    .results-scroll-panel {
+      max-height: none;
+      overflow-y: hidden;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      padding-bottom: 0.5rem;
+      box-sizing: border-box;
+      display: flex;
+      flex-wrap: nowrap;
+
+      /* ✅ Fix from screenshot: stop the first card from clipping */
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+      scroll-padding-left: 0.75rem;
+      scroll-padding-right: 0.75rem;
+    }
+
+    /* Wrapper around scroll controls + strip */
+    .results-scroll-wrapper {
+      margin-top: 1rem;
+    }
+
+    /* Buttons that jump to start/end */
+    .scroll-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Nav buttons */
+    .nav-button {
+      flex: 1 1 auto;
+      font-size: 0.95rem;
+    }
+
+    /* Results indicator pill */
+    .results-pill {
+      display: inline-block;
+      margin-left: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      border: 2px solid var(--border);
+      background: var(--chip-bg);
+      color: var(--text-dark);
+      vertical-align: middle;
+    }
+
+    /* Waiting pill */
+    .results-pill.waiting { background: #f3f6f7; }
+    /* Ready pill */
+    .results-pill.ready {
+      background: var(--cta);
+      border-color: var(--brand-teal);
+    }
+
+    /* Skip link for keyboard users */
+    .skip-link {
+      position: absolute;
+      left: -999px;
+      top: 10px;
+      background: #fff;
+      color: var(--text-dark);
+      border: 3px solid var(--focus);
+      padding: 10px 12px;
+      border-radius: 10px;
+      z-index: 9999;
+    }
+
+    /* Show skip link when focused */
+    .skip-link:focus {
+      left: 10px;
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 600px) {
+      h1 { font-size: 1.9rem; }
+
+      .section-heading {
+        font-size: 1.5rem;
+        text-align: left;
+      }
+
+      .section-lead {
+        text-align: left;
+        font-size: 0.98rem;
+      }
+
+      .search-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-controls input[type="text"] {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .filters,
+      .az {
+        justify-content: flex-start;
+      }
+
+      .nav-button,
+      .results-toggle {
+        width: 100%;
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Skip link for keyboard users -->
+  <a class="skip-link" href="#searchResultsSection">Skip to Search Results</a>
+
+  <!-- Main page wrapper -->
+  <main class="page">
+    <!-- Page title -->
+    <h1>Explore our digital library</h1>
+
+    <!-- Intro instructions -->
+    <p class="lead">
+      Use the tools on this page to look up files related to the marginalization
+      the mooring community in Newport Beach, California. The full library is located at the bottom of the page.
+    </p>
+
+    <!-- Divider -->
+    <div class="section-divider"></div>
+
+    <!-- ========================= -->
+    <!-- SEARCH SECTION STARTS HERE -->
+    <!-- ========================= -->
+    <section class="search-section" aria-label="Search tools">
+      <!-- Search header -->
+      <div class="search-header">
+        <h2 class="section-heading">Search the NMA Library</h2>
+        <p class="section-lead">
+          The search tools are collapsed. Click the “Search Tools” bar below to open them and get started.
+          Results will display in the Search Results section below.
+        </p>
+      </div>
+
+      <!-- Collapsible search tools (✅ now STARTS collapsed because we removed "open") -->
+      <details class="search-box" id="searchTools">
+        <!-- Summary line: arrow + label -->
+        <summary aria-controls="searchToolsPanel" aria-expanded="false">
+          <span class="disclosure-arrow" aria-hidden="true">▼</span>
+          Search Tools (click to open)
+        </summary>
+
+       
+  
+
+        <!-- How this works  -->
+        <div class="tool-instructions" aria-label="How search works">
+          <h3>How this works</h3>
+          <p>
+            Pick <strong>one</strong> tool below:
+            <strong>Keyword Search</strong> finds matches in titles/metadata/text,
+            <strong>A–Z</strong> shows titles that start with a letter,
+            and <strong>Tags</strong> filters topics. Your matches will show up in <strong>Search Results</strong> below.
+          </p>
+        </div>
+
+        <!-- Tool group 1: keyword search -->
+        <fieldset class="tool-group" aria-describedby="keywordHelp">
+          <legend>Tool 1: Keyword Search</legend>
+
+          <label class="field-label" for="searchInput">Type a keyword</label>
+
+          <div class="search-controls">
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Example: permit, rates, Coastal Commission..."
+              autocomplete="off"
+              aria-describedby="keywordHelp"
+            >
+            <button type="button" id="searchBtn" class="button-19" aria-label="Run keyword search">
+              Search
+            </button>
+          </div>
+
+          <p class="help-text" id="keywordHelp">
+            Tip: Press <strong>Enter</strong> to search. If you leave this blank, the page will reset the search view.
+          </p>
+        </fieldset>
+
+        <!-- Separator -->
+        <div class="tool-separator" role="separator" aria-hidden="true"></div>
+
+        <!-- Tool group 2: A–Z -->
+        <fieldset class="tool-group" aria-describedby="azHelp">
+          <legend>Tool 2: Browse A–Z</legend>
+          <p class="help-text" id="azHelp">
+            Click a letter to display items where the title starts with that letter.
+            The selected letter will highlight so you know it’s active.
+          </p>
+
+          <div class="az" id="azFilter" aria-label="A to Z filter"></div>
+        </fieldset>
+
+        <!-- Separator -->
+        <div class="tool-separator" role="separator" aria-hidden="true"></div>
+
+        <!-- Tool group 3: tags -->
+        <fieldset class="tool-group" aria-describedby="tagHelp">
+          <legend>Tool 3: Browse by Tag</legend>
+          <p class="help-text" id="tagHelp">
+            Click one or more tags to filter topics. Clicking a selected tag again will remove it.
+            Tag matches will also display in <strong>Search Results</strong> below.
+          </p>
+
+          <div class="filters" id="tagFilterRow" aria-label="Tag filter"></div>
+        </fieldset>
+
+        <!-- Status banner -->
+        <div
+          id="searchStatus"
+          class="status-banner status-waiting"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <span class="status-dot" aria-hidden="true"></span>
+          <p class="status-text" id="searchStatusText">
+            <strong>Status:</strong> No search has been run yet. Your results are <strong>waiting</strong> and will appear in the <strong>Search Results</strong> section below.
+          </p>
+        </div>
+      </details>
+
+      <!-- Reset button -->
+      <button
+        id="resetBtn"
+        class="button-19 reset-button results-toggle"
+        type="button"
+        aria-label="Reset search and filters"
+      >
+        ← Reset Search / Filters
+      </button>
+    </section>
+    <!-- ======================= -->
+    <!-- SEARCH SECTION ENDS HERE -->
+    <!-- ======================= -->
+
+    <!-- Divider -->
+    <div class="section-divider"></div>
+
+    <!-- ============================ -->
+    <!-- SEARCH RESULTS SECTION START -->
+    <!-- ============================ -->
+    <section id="searchResultsSection" aria-label="Search results" tabindex="-1">
+      <h2 class="section-heading">
+        Search Results
+        <span id="resultsPill" class="results-pill waiting">Waiting</span>
+      </h2>
+
+      <p class="section-lead">
+        Results from <strong>Keyword</strong>, <strong>A–Z</strong>, or <strong>Tags</strong> will appear here.
+        Scroll the cards horizontally, or use the buttons to jump to the start/end.
+      </p>
+
+      <div class="results-scroll-wrapper">
+        <div id="searchScrollControls" class="scroll-controls" style="display:none;">
+          <button type="button" class="button-19 nav-button" id="searchTopBtn">
+            ⬅️ Back to start of results
+          </button>
+          <button type="button" class="button-19 nav-button" id="searchBottomBtn">
+            ➡️ Jump to end of results
+          </button>
+        </div>
+
+        <div id="searchResultsPanel" class="results-scroll-panel"></div>
+      </div>
+
+      <div style="text-align:center; margin-top: 1rem;">
+        <button type="button" class="button-19 results-toggle" id="searchResetBottomBtn">
+          Reset Search / Filters
+        </button>
+      </div>
+    </section>
+    <!-- ========================== -->
+    <!-- SEARCH RESULTS SECTION END -->
+    <!-- ========================== -->
+
+    <!-- Divider -->
+    <div class="section-divider"></div>
+
+    <!-- =========================== -->
+    <!-- FULL LIBRARY SECTION START  -->
+    <!-- =========================== -->
+    <section aria-label="Full library list">
+      <h2 class="section-heading">Browse the Full Digital Library</h2>
+      <p class="section-lead">
+        View every item currently in the NMA Library. The list is a horizontal strip of cards
+        you can scroll through, with buttons to jump to the start or end.
+      </p>
+
+      <div style="text-align:center; margin-bottom: 1rem;">
+        <button id="showListBtn" class="button-19 results-toggle" type="button">
+          View Full List
+        </button>
+      </div>
+
+      <div id="resultsContainer" style="display: none;">
+        <button type="button" id="hideListTopBtn" class="button-19 results-toggle">
+          Hide List
+        </button>
+
+        <div class="results-scroll-wrapper">
+          <div class="scroll-controls">
+            <button type="button" class="button-19 nav-button" id="fullTopBtn">
+              ⬅️ Back to start of list
+            </button>
+            <button type="button" class="button-19 nav-button" id="fullBottomBtn">
+              ➡️ Jump to end of list
+            </button>
+          </div>
+
+          <div id="fullListPanel" class="results-scroll-panel"></div>
+        </div>
+
+        <div style="text-align:center; margin-top: 1rem;">
+          <button type="button" id="hideListBottomBtn" class="button-19 results-toggle">
+            Hide List
+          </button>
+        </div>
+      </div>
+    </section>
+    <!-- ========================= -->
+    <!-- FULL LIBRARY SECTION END  -->
+    <!-- ========================= -->
+  </main>
+
+  <!-- PapaParse library (this is what reads the CSV for us) -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <script>
+    /* --------------------------------------------------
+       CSV_URL
+       👉 IMPORTANT FOR FUTURE HANDLERS:
+       This is the ONLY place you change if the spreadsheet changes.
+       -------------------------------------------------- */
+    const CSV_URL =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vS39H0IuSeS4LUoyeWP33XNyk58dubD5bu6pVRedMBtOAvapAoYWFXSjdBiagexCA-Djcpn5HwrlnMs/pub?output=csv";
+
+    /* If transcript/summary is longer than this, we collapse it */
+    const MAX_CONTENT_LENGTH = 300;
+
+    /* --------------------------------------------------
+       DOM references (aka “grab the stuff we’ll update”)
+       -------------------------------------------------- */
+    const resultsContainerEl = document.getElementById("resultsContainer");
+    const fullListPanelEl = document.getElementById("fullListPanel");
+    const showListButtonEl = document.getElementById("showListBtn");
+
+    const searchToolsDetailsEl = document.getElementById("searchTools");       // the <details> element
+    const searchToolsSummaryEl = searchToolsDetailsEl.querySelector("summary"); // the <summary> element (clickable)
+    const searchInputEl = document.getElementById("searchInput");
+    const resetButtonEl = document.getElementById("resetBtn");
+    const azFilterContainerEl = document.getElementById("azFilter");
+    const tagFilterRowEl = document.getElementById("tagFilterRow");
+
+    const searchResultsSectionEl = document.getElementById("searchResultsSection");
+    const searchResultsPanelEl = document.getElementById("searchResultsPanel");
+    const searchScrollControlsEl = document.getElementById("searchScrollControls");
+
+    const searchStatusEl = document.getElementById("searchStatus");
+    const searchStatusTextEl = document.getElementById("searchStatusText");
+    const resultsPillEl = document.getElementById("resultsPill");
+
+    /* --------------------------------------------------
+       In-memory data + state
+       -------------------------------------------------- */
+    let allRowsFromCsv = [];           // everything from the CSV (cleaned)
+    let sortedRows = [];               // copy sorted by title
+    let activeAlphabetLetter = null;   // which A–Z letter is active
+    let selectedTags = new Set();      // selected tags
+
+    /* --------------------------------------------------
+       Accessibility: keep aria-expanded correct on the summary
+       (browsers don’t always do this exactly how people expect)
+       -------------------------------------------------- */
+    function syncSummaryAria() {
+      const isOpen = searchToolsDetailsEl.hasAttribute("open");
+      searchToolsSummaryEl.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    }
+
+    /* run once on load */
+    syncSummaryAria();
+
+    /* update aria-expanded when opened/closed */
+    searchToolsDetailsEl.addEventListener("toggle", syncSummaryAria);
+
+    /* --------------------------------------------------
+       Utility: parse tags string -> array
+       -------------------------------------------------- */
+    function parseTags(rawTags) {
+      if (!rawTags) return [];
+      return rawTags
+        .replace(/[\[\]]/g, "")
+        .split(/[,/]/)
+        .map(t => t.trim())
+        .filter(Boolean);
+    }
+
+    /* Utility: nicer title from filename */
+    function formatTitleFromFileName(rawFileName) {
+      if (!rawFileName) return "Untitled";
+      return rawFileName
+        .replace(/Copy of /gi, "")
+        .replace(/_/g, " ")
+        .trim();
+    }
+
+    /* Utility: combine row text into one searchable string */
+    function buildSearchText(row) {
+      return Object.values(row)
+        .filter(v => typeof v === "string")
+        .join(" | ")
+        .toLowerCase();
+    }
+
+    /* --------------------------------------------------
+       Status helpers (waiting vs ready)
+       -------------------------------------------------- */
+    function setResultsWaiting(message) {
+      resultsPillEl.classList.remove("ready");
+      resultsPillEl.classList.add("waiting");
+      resultsPillEl.textContent = "Waiting";
+
+      searchStatusEl.classList.remove("status-active");
+      searchStatusEl.classList.add("status-waiting");
+
+      searchStatusTextEl.innerHTML =
+        `<strong>Status:</strong> ${message} Results are <strong>waiting</strong> and will appear in the <strong>Search Results</strong> section below.`;
+    }
+
+    function setResultsReady(message) {
+      resultsPillEl.classList.remove("waiting");
+      resultsPillEl.classList.add("ready");
+      resultsPillEl.textContent = "Ready";
+
+      searchStatusEl.classList.remove("status-waiting");
+      searchStatusEl.classList.add("status-active");
+
+      searchStatusTextEl.innerHTML =
+        `<strong>Status:</strong> ${message} Results are <strong>ready</strong> in the <strong>Search Results</strong> section below.`;
+    }
+
+    /* --------------------------------------------------
+       Load CSV once, then build the UI
+       -------------------------------------------------- */
+    fetch(CSV_URL)
+      .then(response => response.text())
+      .then(csvText => {
+        const parsed = Papa.parse(csvText, { header: true });
+
+        const rows = (parsed.data || []).filter(row =>
+          row.file_name || row.file_id || row.link
+        );
+
+        allRowsFromCsv = rows.map(row => {
+          const title = formatTitleFromFileName(row.file_name || "");
+          const tagsArray = parseTags(row.tags || "");
+          const searchText = buildSearchText(row);
+          return { ...row, title, tagsArray, searchText };
+        });
+
+        sortedRows = allRowsFromCsv.slice().sort((a, b) =>
+          a.title.localeCompare(b.title)
+        );
+
+        if (!sortedRows.length) {
+          searchResultsPanelEl.innerHTML =
+            "<div class='card'><p>No rows were loaded from the CSV. Please confirm the sheet is published as CSV and the headers are correct.</p></div>";
+          setResultsWaiting("The library could not be loaded.");
+          return;
+        }
+
+        renderFullList(sortedRows);
+        buildAlphabetFilter(sortedRows);
+        buildTagFilterUI(sortedRows);
+        renderSearchPlaceholder();
+        setResultsWaiting("No search has been run yet.");
+      })
+      .catch(() => {
+        fullListPanelEl.innerHTML =
+          "<div class='card'><p>There was a problem loading the library.</p></div>";
+        searchResultsPanelEl.innerHTML =
+          "<div class='card'><p>There was a problem loading search results.</p></div>";
+        setResultsWaiting("The library failed to load.");
+      });
+
+    /* Show the full list area */
+    function showFullResults() {
+      resultsContainerEl.style.display = "block";
+      showListButtonEl.style.display = "none";
+    }
+
+    /* Hide the full list area */
+    function hideFullResults() {
+      resultsContainerEl.style.display = "none";
+      showListButtonEl.style.display = "inline-block";
+    }
+
+    /* Render the full list cards */
+    function renderFullList(rows) {
+      fullListPanelEl.innerHTML = rows.map(renderResultCard).join("");
+      resetButtonEl.style.display = "none";
+    }
+
+    /* Placeholder in Search Results before searching */
+    function renderSearchPlaceholder() {
+      if (searchScrollControlsEl) searchScrollControlsEl.style.display = "none";
+
+      searchResultsPanelEl.innerHTML = `
+        <div class="card">
+          <h3>📎 Results will appear here</h3>
+          <div class="meta">
+            <small>Pick a tool in “Search Tools”</small>
+            <small>Then come back here</small>
+          </div>
+          <p>
+            No search has been run yet. When you use Keyword, A–Z, or Tags,
+            matching files will show up here as cards.
+          </p>
+        </div>
+      `;
+    }
+
+    /* Clear A–Z highlights */
+    function clearAlphabetHighlight() {
+      if (!azFilterContainerEl) return;
+      const letterSpans = azFilterContainerEl.querySelectorAll("span");
+      letterSpans.forEach(span => span.classList.remove("chip-selected"));
+    }
+
+    /* Build A–Z chips */
+    function buildAlphabetFilter(rows) {
+      const letterSet = new Set();
+
+      rows.forEach(row => {
+        if (!row.title) return;
+        const firstChar = row.title.charAt(0).toUpperCase();
+        if (firstChar >= "A" && firstChar <= "Z") letterSet.add(firstChar);
+      });
+
+      const letters = Array.from(letterSet).sort();
+      azFilterContainerEl.innerHTML = "";
+
+      if (!letters.length) {
+        azFilterContainerEl.style.display = "none";
+        return;
+      }
+
+      azFilterContainerEl.style.display = "flex";
+
+      letters.forEach(letter => {
+        const span = document.createElement("span");
+        span.textContent = letter;
+        span.className = "chip";
+
+        span.setAttribute("role", "button");
+        span.setAttribute("tabindex", "0");
+        span.setAttribute("aria-label", `Browse titles starting with ${letter}`);
+
+        span.addEventListener("click", () => filterByAlphabetLetter(letter));
+
+        span.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            filterByAlphabetLetter(letter);
+          }
+        });
+
+        azFilterContainerEl.appendChild(span);
+      });
+    }
+
+    /* A–Z filtering */
+    function filterByAlphabetLetter(letter) {
+      activeAlphabetLetter = letter;
+
+      searchInputEl.value = "";
+      clearAlphabetHighlight();
+
+      if (azFilterContainerEl) {
+        const letterSpans = azFilterContainerEl.querySelectorAll("span");
+        letterSpans.forEach(span => {
+          if (span.textContent === letter) span.classList.add("chip-selected");
+        });
+      }
+
+      clearAllTagSelections();
+
+      const filteredRows = sortedRows.filter(row =>
+        row.title.toUpperCase().startsWith(letter)
+      );
+
+      resultsContainerEl.style.display = "none";
+      showListButtonEl.style.display = "inline-block";
+      resetButtonEl.style.display = "inline-block";
+
+      if (!filteredRows.length) {
+        searchResultsPanelEl.innerHTML =
+          `<div class='card'><p>No results found for titles starting with "${letter}".</p></div>`;
+        if (searchScrollControlsEl) searchScrollControlsEl.style.display = "none";
+        setResultsReady(`A–Z browse ran for “${letter}”, but no matches were found.`);
+        focusResults();
+        return;
+      }
+
+      searchResultsPanelEl.innerHTML = filteredRows.map(renderResultCard).join("");
+      if (searchScrollControlsEl) searchScrollControlsEl.style.display = "flex";
+
+      setResultsReady(`A–Z browse ran for “${letter}”.`);
+      focusResults();
+    }
+
+    /* Keyword search */
+    function runKeywordSearch() {
+      const query = (searchInputEl.value || "").toLowerCase().trim();
+
+      activeAlphabetLetter = null;
+      clearAlphabetHighlight();
+      clearAllTagSelections();
+
+      if (!query) {
+        resetSearchAndFilters();
+        return;
+      }
+
+      const filtered = allRowsFromCsv.filter(row =>
+        row.searchText.includes(query)
+      );
+
+      resultsContainerEl.style.display = "none";
+      showListButtonEl.style.display = "inline-block";
+      resetButtonEl.style.display = "inline-block";
+
+      if (!filtered.length) {
+        searchResultsPanelEl.innerHTML =
+          "<div class='card'><p>No results found.</p></div>";
+        if (searchScrollControlsEl) searchScrollControlsEl.style.display = "none";
+        setResultsReady(`Keyword search ran for “${escapeHtml(query)}”, but no matches were found.`);
+        focusResults();
+        return;
+      }
+
+      const sorted = filtered.slice().sort((a, b) =>
+        a.title.localeCompare(b.title)
+      );
+
+      searchResultsPanelEl.innerHTML = sorted.map(renderResultCard).join("");
+      if (searchScrollControlsEl) searchScrollControlsEl.style.display = "flex";
+
+      setResultsReady(`Keyword search ran for “${escapeHtml(query)}”.`);
+      focusResults();
+    }
+
+    /* Build tag chips */
+    function buildTagFilterUI(rows) {
+      const uniqueTags = new Set();
+
+      rows.forEach(row => {
+        row.tagsArray.forEach(tag => uniqueTags.add(tag));
+      });
+
+      tagFilterRowEl.innerHTML = "";
+      const tagsArray = Array.from(uniqueTags).sort();
+
+      tagsArray.forEach(tag => {
+        const span = document.createElement("span");
+        span.textContent = tag;
+        span.className = "chip";
+
+        span.setAttribute("role", "button");
+        span.setAttribute("tabindex", "0");
+        span.setAttribute("aria-label", `Toggle tag filter: ${tag}`);
+
+        span.addEventListener("click", () => handleTagClick(tag, span));
+
+        span.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleTagClick(tag, span);
+          }
+        });
+
+        tagFilterRowEl.appendChild(span);
+      });
+    }
+
+    /* Toggle tag and render results into Search Results */
+    function handleTagClick(tag, chipEl) {
+      searchInputEl.value = "";
+      activeAlphabetLetter = null;
+      clearAlphabetHighlight();
+
+      if (selectedTags.has(tag)) {
+        selectedTags.delete(tag);
+        chipEl.classList.remove("chip-selected");
+      } else {
+        selectedTags.add(tag);
+        chipEl.classList.add("chip-selected");
+      }
+
+      updateTagResultsIntoSearchResults();
+    }
+
+    /* Clear tags helper */
+    function clearAllTagSelections() {
+      selectedTags.clear();
+      if (!tagFilterRowEl) return;
+      const chips = tagFilterRowEl.querySelectorAll(".chip");
+      chips.forEach(c => c.classList.remove("chip-selected"));
+    }
+
+    /* Tag results (AND logic) -> Search Results */
+    function updateTagResultsIntoSearchResults() {
+      if (selectedTags.size === 0) {
+        renderSearchPlaceholder();
+        if (searchScrollControlsEl) searchScrollControlsEl.style.display = "none";
+        resetButtonEl.style.display = "none";
+        setResultsWaiting("No tag filters are selected.");
+        return;
+      }
+
+      const activeTags = Array.from(selectedTags);
+
+      const rowsWithTags = allRowsFromCsv.filter(row => {
+        const rowTags = row.tagsArray;
+        if (!rowTags.length) return false;
+        return activeTags.every(tag => rowTags.includes(tag));
+      });
+
+      resultsContainerEl.style.display = "none";
+      showListButtonEl.style.display = "inline-block";
+      resetButtonEl.style.display = "inline-block";
+
+      if (!rowsWithTags.length) {
+        searchResultsPanelEl.innerHTML =
+          "<div class='card'><p>No documents match the selected tag combination.</p></div>";
+        if (searchScrollControlsEl) searchScrollControlsEl.style.display = "none";
+        setResultsReady(`Tag filter ran for: ${activeTags.map(escapeHtml).join(", ")} (no matches).`);
+        focusResults();
+        return;
+      }
+
+      const sorted = rowsWithTags.slice().sort((a, b) => a.title.localeCompare(b.title));
+      searchResultsPanelEl.innerHTML = sorted.map(renderResultCard).join("");
+      if (searchScrollControlsEl) searchScrollControlsEl.style.display = "flex";
+
+      setResultsReady(`Tag filter ran for: ${activeTags.map(escapeHtml).join(", ")}.`);
+      focusResults();
+    }
+
+    /* Reset everything */
+    function resetSearchAndFilters() {
+      searchInputEl.value = "";
+      activeAlphabetLetter = null;
+      clearAlphabetHighlight();
+      clearAllTagSelections();
+
+      renderSearchPlaceholder();
+      resetButtonEl.style.display = "none";
+      if (searchScrollControlsEl) searchScrollControlsEl.style.display = "none";
+
+      resultsContainerEl.style.display = "none";
+      showListButtonEl.style.display = "inline-block";
+
+      renderFullList(sortedRows);
+      setResultsWaiting("No search has been run yet.");
+    }
+
+    /* Build result card */
+    function renderResultCard(row) {
+      const title = row.title || "Untitled";
+
+      const hasTranscript = (row.transcript || "").trim().length > 0;
+      const hasSummary = (row.summary || "").trim().length > 0;
+
+      const dateValue = (row.date || "").trim();
+      const dateLabel = dateValue || "Date not listed";
+
+      let content;
+      if (hasTranscript) content = row.transcript;
+      else if (hasSummary) content = row.summary;
+      else content = "No summary/transcript available currently";
+
+      const tagsHtml = row.tagsArray.length
+        ? row.tagsArray.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join(" ")
+        : `<span class="tag">General</span>`;
+
+      const transcriptStatus = hasTranscript ? "✔" : "✖";
+      const link = row.link || "#";
+
+      const isLong = typeof content === "string" && content.length > MAX_CONTENT_LENGTH;
+
+      if (!isLong) {
+        return `
+          <div class="card">
+            <h3>📎 <a href="${escapeAttr(link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(title)}</a></h3>
+            <div class="meta">
+              <small>Source: ${escapeHtml(row.author || "Unknown")}</small>
+              <small>Date: ${escapeHtml(dateLabel)}</small>
+              ${tagsHtml}
+              <small>Transcript: ${transcriptStatus}</small>
+            </div>
+            <p>${escapeHtml(content)}</p>
+          </div>
+        `;
+      }
+
+      const shortText = content.slice(0, MAX_CONTENT_LENGTH) + "…";
+
+      return `
+        <div class="card">
+          <h3>📎 <a href="${escapeAttr(link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(title)}</a></h3>
+          <div class="meta">
+            <small>Source: ${escapeHtml(row.author || "Unknown")}</small>
+            <small>Date: ${escapeHtml(dateLabel)}</small>
+            ${tagsHtml}
+            <small>Transcript: ${transcriptStatus}</small>
+          </div>
+
+          <p class="card-text-short">${escapeHtml(shortText)}</p>
+          <p class="card-text-full" style="display:none;">${escapeHtml(content)}</p>
+
+          <button type="button" class="button-19" onclick="toggleCardContent(this)">
+            Show more
+          </button>
+        </div>
+      `;
+    }
+
+    /* Expand/collapse long text inside a card */
+    function toggleCardContent(button) {
+      const card = button.closest(".card");
+      if (!card) return;
+
+      const shortEl = card.querySelector(".card-text-short");
+      const fullEl = card.querySelector(".card-text-full");
+      if (!shortEl || !fullEl) return;
+
+      const isExpanded = fullEl.style.display !== "none";
+
+      if (isExpanded) {
+        fullEl.style.display = "none";
+        shortEl.style.display = "block";
+        button.textContent = "Show more";
+      } else {
+        fullEl.style.display = "block";
+        shortEl.style.display = "none";
+        button.textContent = "Show less";
+      }
+    }
+
+    /* Horizontal scroll helper */
+    function scrollPanel(panelId, position) {
+      const panel = document.getElementById(panelId);
+      if (!panel) return;
+
+      const left = position === "start" ? 0 : panel.scrollWidth;
+      panel.scrollTo({ left, behavior: "smooth" });
+    }
+
+    /* Bring results into view + move keyboard focus there */
+    function focusResults() {
+      searchResultsSectionEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      searchResultsSectionEl.focus({ preventScroll: true });
+    }
+
+    /* HTML escaping helpers (keeps data from breaking layout) */
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str);
+    }
+
+    /* Hook up the buttons */
+    function attachEventHandlers() {
+      document.getElementById("searchBtn")?.addEventListener("click", runKeywordSearch);
+
+      searchInputEl?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") runKeywordSearch();
+      });
+
+      resetButtonEl?.addEventListener("click", resetSearchAndFilters);
+      document.getElementById("searchResetBottomBtn")?.addEventListener("click", resetSearchAndFilters);
+
+      showListButtonEl?.addEventListener("click", showFullResults);
+      document.getElementById("hideListTopBtn")?.addEventListener("click", hideFullResults);
+      document.getElementById("hideListBottomBtn")?.addEventListener("click", hideFullResults);
+
+      document.getElementById("searchTopBtn")?.addEventListener("click", () =>
+        scrollPanel("searchResultsPanel", "start")
+      );
+      document.getElementById("searchBottomBtn")?.addEventListener("click", () =>
+        scrollPanel("searchResultsPanel", "end")
+      );
+
+      document.getElementById("fullTopBtn")?.addEventListener("click", () =>
+        scrollPanel("fullListPanel", "start")
+      );
+      document.getElementById("fullBottomBtn")?.addEventListener("click", () =>
+        scrollPanel("fullListPanel", "end")
+      );
+    }
+
+    /* run event wiring once */
+    attachEventHandlers();
+  </script>
+</body>
+</html>
+
