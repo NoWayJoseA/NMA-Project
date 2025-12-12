@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NMA Timeline</title>
+  <link rel="icon" href="/assets/nma-favicon.png" />
+
+  <style>
+    /* ==================================================
+       Global design tokens (shared colors)
+       ================================================== */
+    :root {
+      --brand-teal: #afdce0;
+      --cta: #afdce0;
+      --border: #d3e8eb;
+      --chip-bg: #f0fafb;
+      --text-dark: #142129;
+    }
+
+    /* ==================================================
+       Base page layout
+       ================================================== */
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      background: #fff;
+      color: var(--text-dark);
+    }
+
+    .page {
+      padding: 1.5rem;
+      max-width: 1100px;
+      margin: auto;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.3rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .lead {
+      max-width: 60ch;
+      margin: 0 auto 24px;
+      text-align: center;
+      color: #26343c;
+      font-size: 1.05rem;
+      font-weight: 500;
+    }
+
+    .section-heading {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 0.3rem;
+    }
+
+    .section-lead {
+      max-width: 70ch;
+      margin: 0 auto 1rem;
+      text-align: center;
+      color: #2e3d45;
+      font-size: 1.05rem;
+      font-weight: 500;
+    }
+
+    .section-divider {
+      border-top: 5px solid var(--brand-teal);
+      margin: 2rem 0;
+    }
+
+    /* ==================================================
+       Button styling (button-19)
+       ================================================== */
+    .button-19 {
+      appearance: button;
+      background-color: var(--cta);
+      border: solid transparent;
+      border-radius: 16px;
+      border-width: 0 0 4px;
+      box-sizing: border-box;
+      color: var(--text-dark);
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 8px 14px;
+      text-transform: uppercase;
+      position: relative;
+    }
+
+    .button-19:after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      bottom: -4px;
+      background-color: var(--cta);
+      border-radius: 16px;
+      z-index: -1;
+    }
+
+    .button-19.small-nav {
+      font-size: 12px;
+      padding: 6px 10px;
+      letter-spacing: 0.06em;
+    }
+
+    /* ==================================================
+       KnightLab timeline frame
+       ================================================== */
+    .timeline-frame {
+      border: 4px solid var(--cta);
+      border-radius: 14px;
+      padding: 1.3rem;
+      background: #f9ffff;
+    }
+
+    .timeline-frame header h2 {
+      text-align: center;
+      font-size: 1.5rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .timeline-frame header p {
+      max-width: 70ch;
+      margin: 0 auto 1rem;
+      text-align: center;
+      color: #2e3d45;
+    }
+
+    /* ==================================================
+       Timeline list section (FIX APPLIED HERE)
+       ================================================== */
+    .timeline-list-section {
+      border: 4px solid var(--cta);
+      border-radius: 14px;
+      padding: 1.2rem;
+      background: #fff;
+    }
+
+    .scroll-nav {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin: 0.5rem 0;
+    }
+
+    /* FIX: force a visible scroll panel even when content is short */
+   .scroll-strip {
+  /* Shows ~5 timeline cards at once on desktop */
+  max-height: 700px;
+
+  /* Prevents the container from collapsing */
+  min-height: 300px;
+
+  /* Enables vertical scrolling when content exceeds max-height */
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  /* Smooth scrolling when buttons are clicked */
+  scroll-behavior: smooth;
+
+  /* Prevents scrollbar from covering content */
+  padding-right: 0.25rem;
+  box-sizing: border-box;
+
+  /* Keeps scrollbar space reserved even if idle */
+  scrollbar-gutter: stable;
+
+  /* Firefox scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-teal) #f0fafb;
+}
+
+
+    /* Chrome / Edge / Safari scrollbar */
+    .scroll-strip::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    .scroll-strip::-webkit-scrollbar-track {
+      background: #f0fafb;
+      border-left: 1px solid var(--border);
+    }
+
+    .scroll-strip::-webkit-scrollbar-thumb {
+      background-color: var(--brand-teal);
+      border-radius: 999px;
+      border: 3px solid #f0fafb;
+    }
+
+    .scroll-strip::-webkit-scrollbar-thumb:hover {
+      background-color: #9fcfd4;
+    }
+
+    .timeline-list {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0 0;
+    }
+
+    .timeline-card {
+      border: 5px solid var(--border);
+      border-left: 5px solid var(--brand-teal);
+      border-radius: 10px;
+      padding: 1rem;
+      background: #fff;
+      margin-bottom: 1rem;
+    }
+
+    .timeline-card-date {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #3a4951;
+      margin: 0 0 0.4rem;
+    }
+
+    .timeline-card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 0 0 0.35rem;
+    }
+
+    .timeline-card-text {
+      margin: 0;
+      color: #2e3d45;
+      line-height: 1.5;
+    }
+
+    .timeline-card-link {
+      margin-top: 0.45rem;
+      font-size: 0.9rem;
+    }
+
+    .timeline-card-link a {
+      color: var(--text-dark);
+      text-decoration: underline;
+    }
+
+    .muted {
+      text-align: center;
+      color: #777;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+<main class="page">
+
+  <h1>Newport Mooring Association's Historical Timeline</h1>
+
+  <p class="lead">
+    Explore key events and policy changes that shaped Newport Harbor.
+    An interactive timeline is followed by a scrollable list.
+  </p>
+
+  <div class="section-divider"></div>
+
+  <section class="timeline-frame">
+    <header>
+      <h2>Interactive timeline</h2>
+      <p>Drag or use arrows to move through time.</p>
+    </header>
+
+    <iframe
+      src="https://cdn.knightlab.com/libs/timeline3/latest/embed/index.html?source=v2%3A2PACX-1vRa_n__SZZMkqV10J_cynmYBpDvdkwF10qG22TTjOHiQZqDUnEj945Khxcak10Kw_zgfDKqfkGGRETJ&font=Default&lang=en&initial_zoom=2&width=100%25&height=650"
+      width="100%"
+      height="650"
+      frameborder="0"
+      allowfullscreen>
+    </iframe>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <section class="timeline-list-section">
+    <h2 class="section-heading">Timeline Events</h2>
+    <p class="section-lead">
+      Scroll through the list or jump to the top or bottom using the buttons.
+    </p>
+
+    <div class="scroll-nav">
+      <button class="button-19 small-nav"
+        onclick="scrollVertical('timelineListWrapper','start')">
+        Back to top
+      </button>
+      <button class="button-19 small-nav"
+        onclick="scrollVertical('timelineListWrapper','end')">
+        Jump to bottom
+      </button>
+    </div>
+
+    <div id="timelineListWrapper" class="scroll-strip">
+      <ul id="timelineList" class="timeline-list"></ul>
+    </div>
+
+    <p id="timelineFallback" class="muted" style="display:none;">
+      No timeline entries available.
+    </p>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+<script>
+const TIMELINE_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vRa_n__SZZMkqV10J_cynmYBpDvdkwF10qG22TTjOHiQZqDUnEj945Khxcak10Kw_zgfDKqfkGGRETJ/pub?output=csv";
+
+const timelineListEl = document.getElementById("timelineList");
+const timelineFallbackEl = document.getElementById("timelineFallback");
+
+function buildSortDate(row) {
+  const y = parseInt((row.Year || "").trim(), 10);
+  if (!Number.isInteger(y)) return null;
+
+  const m = parseInt((row.Month || "").trim(), 10);
+  const d = parseInt((row.Day || "").trim(), 10);
+
+  const monthForSort = (!Number.isNaN(m) && m >= 1 && m <= 12) ? m : 1;
+  const dayForSort   = (!Number.isNaN(d) && d >= 1 && d <= 31) ? d : 1;
+
+  return new Date(y, monthForSort - 1, dayForSort);
+}
+
+fetch(TIMELINE_CSV_URL)
+  .then(r => r.text())
+  .then(text => {
+    const parsed = Papa.parse(text, { header: true });
+
+    const rows = (parsed.data || [])
+      .filter(r => r.Headline)
+      .map((r, i) => {
+        const sortDate = buildSortDate(r);
+        const displayDate =
+          (r["Display Date"] || "").trim() ||
+          (sortDate ? sortDate.getFullYear().toString() : "Date not listed");
+
+        return {
+          index: i,
+          sortDate,
+          displayDate,
+          headline: r.Headline.trim(),
+          text: r.Text || "No description available.",
+          link: r.Link || ""
+        };
+      });
+
+    if (!rows.length) {
+      timelineFallbackEl.style.display = "block";
+      return;
+    }
+
+    rows.sort((a, b) => {
+      if (a.sortDate && b.sortDate) return a.sortDate - b.sortDate;
+      if (a.sortDate) return -1;
+      if (b.sortDate) return 1;
+      return a.index - b.index;
+    });
+
+    timelineListEl.innerHTML = rows.map(r => `
+      <li class="timeline-card">
+        ${r.displayDate ? `<p class="timeline-card-date">${r.displayDate}</p>` : ""}
+        <h3 class="timeline-card-title">${r.headline}</h3>
+        <p class="timeline-card-text">${r.text}</p>
+        ${r.link ? `<p class="timeline-card-link"><a href="${r.link}" target="_blank">Open related document or event</a></p>` : ""}
+      </li>
+    `).join("");
+  })
+  .catch(() => {
+    timelineFallbackEl.style.display = "block";
+  });
+
+function scrollVertical(id, pos) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  el.scrollTo({
+    top: pos === "start" ? 0 : el.scrollHeight,
+    behavior: "smooth"
+  });
+}
+</script>
+</body>
+</html>
